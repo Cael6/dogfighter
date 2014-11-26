@@ -34,7 +34,7 @@ var FSHADER_SOURCE =
   'void main() {\n' +
   '  float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));\n' +
   '  float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));\n' +
-  '  gl_FragColor = v_Color*u_Ambient + v_Color*u_Diffuse*nDotL + v_Color*u_Specular*pow(hDotL, 100.0);\n' +
+  '  gl_FragColor = v_Color*u_Ambient + v_Color*u_Diffuse*nDotL + v_Color*u_Specular*pow(hDotL, 1.0);\n' +
   '}\n';
 
 var move_speed = 0.05;
@@ -44,10 +44,28 @@ var frame_count = 0;
 var max_frame_count = 128;
 var frame_set;
 
-var sun = [0.0, 10.0, 10.0];
+var RED=new Float32Array([1, 0, 0]);
+var WHITE=new Float32Array([1, 1, 1]);
+var GRAY=new Float32Array([0.5, 0.5, 0.5]);
+var SILVER=new Float32Array([0.75, 0.75, 0.75]);
+var BLACK=new Float32Array([0.0, 0.0, 0.0]);
+var OCEAN_BLUE=new Float32Array([0.11, 0.42, 0.63]);
+var SKY_BLUE=new Float32Array([0.32, 0.62, 0.83]);
+var BLUE=new Float32Array([0.0, 0.0, 1.0]);
+var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
+var GREEN=new Float32Array([0.0, 1.0, 0.0]);
+
+var sun = [0.0, 6.0, 200.0];
+var sun_size = 20.0;
+var sun_angle = 0.0;
 var eye = new Float32Array([0.0, 6.0, 0.0]);
+//var eye = new Float32Array([0.0, 130.0, 0.0]); //debug
 var gaze = new Float32Array([0.0, 0.0, 1.0]);
+//var gaze = new Float32Array([0.0, -1.0, 0.0]); //debug
 var up_vec = new Float32Array([0.0, 1.0, 0.0]);
+//var up_vec = new Float32Array([0.0, 0.0, 1.0]); //debug
+var buildings = [new Float32Array([20.0, 2.5, 50.0]), new Float32Array([-30.0, 2.5, 30.0])];
+var build_colours = [BLUE, RED];
 
 function main() {
 
@@ -114,7 +132,7 @@ function main() {
   
   var tick = function(){
 
-    mvpMatrix.setPerspective(45, 1, 1, 100);
+    mvpMatrix.setPerspective(65, 1, 1, 300);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
     //mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
  
@@ -130,9 +148,7 @@ function main() {
     var mdlMatrix = new Matrix4();
     mdlMatrix.setIdentity();
 
-    var new_eye = getTransformedFloat32Array(cameraTransformations, eye);
-
-    setupLight(gl, new_eye);
+    setupLight(gl, eye);
 	
     var now = Date.now();
     var fps = getFPS(now);
@@ -140,22 +156,14 @@ function main() {
 
     drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
     drawSun(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
-    //draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
+    drawBuildings(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
+    draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
     requestAnimationFrame(tick, canvas);
   }
   tick();
 }
 
-  var RED=new Float32Array([1, 0, 0]);
-  var WHITE=new Float32Array([1, 1, 1]);
-  var GRAY=new Float32Array([0.5, 0.5, 0.5]);
-  var SILVER=new Float32Array([0.75, 0.75, 0.75]);
-  var BLACK=new Float32Array([0.0, 0.0, 0.0]);
-  var OCEAN_BLUE=new Float32Array([0.11, 0.42, 0.63]);
-  var SKY_BLUE=new Float32Array([0.32, 0.62, 0.83]);
-  var BLUE=new Float32Array([0.0, 0.0, 1.0]);
-  var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
-  var GREEN=new Float32Array([0.0, 1.0, 0.0]);
+  
 
 function getInverseTranspose(mat4){
 	m = new Matrix4();
@@ -170,18 +178,32 @@ function drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
   mdlMatrixChild.scale(100.0, 1.0, 100.0);
   gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[null, null, null, null, OCEAN_BLUE, null];
+  cubeColors=[null, null, null, null, WHITE, null];
   drawCube(gl, cubeColors, -1);
 }
 
 function drawSun(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix) {
   mdlMatrixChild=new Matrix4(mdlMatrix);
   mdlMatrixChild.translate(sun[0], sun[1], sun[2]);
-  mdlMatrixChild.scale(0.1, 0.1, 0.1);
+  mdlMatrixChild.rotate(sun_angle, 1, 1, 1);
+  mdlMatrixChild.scale(sun_size, sun_size, sun_size);
   gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW];
+  cubeColors=[null, null, null, null, null, YELLOW];
   drawCube(gl, cubeColors, -1);
+}
+
+function drawBuildings(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
+	for(var i=0; i<buildings.length; i++){
+		mdlMatrixChild=new Matrix4(mdlMatrix);
+    mdlMatrixChild.translate(buildings[i][0], buildings[i][1], buildings[i][2]);
+    mdlMatrixChild.scale(1.0, 5.0, 1.0);
+    gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
+    gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
+    cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
+    drawCube(gl, cubeColors, 1);
+	}
+	
 }
 
 function initArrayBuffer(gl, data, num, type, attribute) {
@@ -243,11 +265,11 @@ function setupLight(gl, eye, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
 		return;
 	}
 	
-	gl.uniform4f(u_Ambient, 0.2, 0.2, 0.2, 1.0);
+	gl.uniform4f(u_Ambient, 0.4, 0.4, 0.4, 1.0);
 
 	gl.uniform4f(u_Diffuse, 1.0, 1.0, 1.0, 1.0);
 	
-	gl.uniform4f(u_Specular, 1.0, 1.0, 0.5, 1.0);
+	gl.uniform4f(u_Specular, 0.97, 0.57, 0.0, 1.0);
 	
 	gl.uniform4f(u_LightLocation, sun[0], sun[1], sun[2], 1.0);
 	
@@ -274,6 +296,9 @@ function getFPS(now) {
   var total_time = 0;
   for(var i = 0; i < frame_set.length; i++) {
     total_time += frame_set[i];
+  }
+  if(frame_count%15 == 0){
+    console.log(eye);
   }
   var fps = frame_set.length/total_time * 1000;
   return fps;

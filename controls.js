@@ -2,7 +2,8 @@
 controls.js
 */
 
-var dRot = 1.5;
+var dRot = 4.0;
+var speed_fac = 0.5;
 
 var w_down = false;
 var s_down = false;
@@ -113,7 +114,7 @@ function w_step() {
 	//Increase throttle
 	gaze = normalizeVec(gaze);
 	for(var i = 0; i < 3; i++) {
-		eye[i] = eye[i] + gaze[i]/5;
+		eye[i] = eye[i] + gaze[i] * speed_fac;
 	}
 	if(w_down) {
 		setTimeout(w_step, 50);
@@ -124,7 +125,7 @@ function s_step() {
 	//Decrease throttle
 	gaze = normalizeVec(gaze);
 	for(var i = 0; i < 3; i++) {
-		eye[i] = eye[i] - gaze[i]/5;
+		eye[i] = eye[i] - gaze[i] * speed_fac;
 	}
 	if(s_down) {
 		setTimeout(s_step, 50);
