@@ -34,7 +34,7 @@ var FSHADER_SOURCE =
   'void main() {\n' +
   '  float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));\n' +
   '  float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));\n' +
-  '  gl_FragColor = v_Color*u_Ambient + v_Color*u_Diffuse*nDotL + v_Color*u_Specular*pow(hDotL, 256.0);\n' +
+  '  gl_FragColor = v_Color*u_Ambient + v_Color*u_Diffuse*nDotL + v_Color*u_Specular*pow(hDotL, 100.0);\n' +
   '}\n';
 
 var move_speed = 0.05;
@@ -44,7 +44,7 @@ var frame_count = 0;
 var max_frame_count = 128;
 var frame_set;
 
-var sun = [10.0, 10.0, 0.0];
+var sun = [0.0, 10.0, 10.0];
 var eye = new Float32Array([0.0, 6.0, 0.0]);
 var gaze = new Float32Array([0.0, 0.0, 1.0]);
 var up_vec = new Float32Array([0.0, 1.0, 0.0]);
@@ -106,7 +106,6 @@ function main() {
   // Set the eye point and the viewing volume
   var mvpMatrix = new Matrix4();
   var cameraTransformations = new Matrix4();
-  var bCubeMatrix = new Matrix4();
 
 
   initEventHandlers();
@@ -115,7 +114,7 @@ function main() {
   
   var tick = function(){
 
-    mvpMatrix.setPerspective(30, 1, 1, 100);
+    mvpMatrix.setPerspective(45, 1, 1, 100);
     console.log(up_vec);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
     //mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
@@ -140,7 +139,8 @@ function main() {
     var fps = getFPS(now);
     last = now;
 
-    drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix);
+    drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
+    drawSun(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
     //draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
     requestAnimationFrame(tick, canvas);
   }
@@ -165,13 +165,23 @@ function getInverseTranspose(mat4){
 	return m;
 }
 
-function drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix){
+function drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
   //ocean
   mdlMatrixChild=new Matrix4(mdlMatrix);
   mdlMatrixChild.scale(100.0, 1.0, 100.0);
   gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
   cubeColors=[null, null, null, null, OCEAN_BLUE, null];
+  drawCube(gl, cubeColors, -1);
+}
+
+function drawSun(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix) {
+  mdlMatrixChild=new Matrix4(mdlMatrix);
+  mdlMatrixChild.translate(sun[0], sun[1], sun[2]);
+  mdlMatrixChild.scale(0.1, 0.1, 0.1);
+  gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
+  gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
+  cubeColors=[YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW];
   drawCube(gl, cubeColors, -1);
 }
 
