@@ -102,6 +102,9 @@ function initEventHandlers() {
       case 39: //right
       	right_down = false;
       	break;
+      case 70: //f
+      	resetView();
+      	break;
     }
   });
 }

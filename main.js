@@ -296,3 +296,8 @@ function crossProduct(vec1, vec2) {
   new_vec[2] = vec1[0] * vec2[1] - vec1[1] * vec2[0];
   return new_vec;
 }
+
+function resetView() {
+  gaze = new Float32Array([0.0, 0.0, 1.0]);
+  up_vec = new Float32Array([0.0, 1.0, 0.0]);
+}
