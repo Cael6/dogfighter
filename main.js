@@ -91,7 +91,7 @@ function main() {
   }
 
   // Initialize shaders
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+  if (!initShaders(gl, 'shader-vs', 'shader-fs')) {
     console.log('Failed to intialize shaders.');
     return;
   }
