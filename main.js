@@ -26,44 +26,30 @@ var FSHADER_SOURCE =
   'varying vec4 v_Color;\n' +
   'varying vec4 v_Position;\n' +
   'varying vec4 v_Normal;\n' +
-  'uniform vec4 u_Eye;\n' +
+  'uniform vec4 u_eye;\n' +
   'uniform vec4 u_Ambient;\n' +
   'uniform vec4 u_Diffuse;\n' +
   'uniform vec4 u_Specular;\n' +
   'uniform vec4 u_LightLocation;\n' +
   'void main() {\n' +
   '  float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));\n' +
-  '  float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_Eye-v_Position))));\n' +
+  '  float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));\n' +
   '  gl_FragColor = v_Color*u_Ambient + v_Color*u_Diffuse*nDotL + v_Color*u_Specular*pow(hDotL, 256.0);\n' +
   '}\n';
 
-
-var currentAngle = [0.0, 0.0]; // Current rotation angle ([x-axis, y-axis] degrees)
-
-var table_x = 0.0;
-var table_z = 0.0;
-var light_y = -0.4;
-
 var move_speed = 0.05;
-
-var bCube_move_speed = 10;
-var bCubeDisp;
-var bCubeVel;
-
-var bCubeRot;
-var bCubeAngle;
 
 var frame_set_dt;
 var frame_count = 0;
 var max_frame_count = 128;
 var frame_set;
 
+var sun = [10.0, 10.0, 0.0];
+var eye = new Float32Array([0.0, 6.0, 0.0]);
+var gaze = new Float32Array([0.0, 0.0, 1.0]);
+var up_vec = new Float32Array([0.0, 1.0, 1.0]);
 
 function main() {
-  bCubeVel = new Float32Array([bCube_move_speed * (Math.random() - 0.5) * 2, bCube_move_speed * (Math.random() - 0.5) * 2, bCube_move_speed * (Math.random() - 0.5) * 2]);
-  bCubeRot = new Float32Array([0.0, 1.0, 0.0, 0.0]);
-  bCubeDisp = new Float32Array([0.0, 0.0, 0.0]);
-  bCubeAngle = 0.0;
 
   frame_set = new Array();
 
@@ -118,25 +104,23 @@ function main() {
   }
 
   // Set the eye point and the viewing volume
-  var EYE=new Float32Array([0.0, 0.0, 6.0]);
   var mvpMatrix = new Matrix4();
   var cameraTransformations = new Matrix4();
   var bCubeMatrix = new Matrix4();
 
 
-  initEventHandlers(hud, currentAngle);
+  initEventHandlers();
+
+  gl.clearColor(SKY_BLUE[0], SKY_BLUE[1], SKY_BLUE[2], 1.0);
   
   var tick = function(){
 
     mvpMatrix.setPerspective(30, 1, 1, 100);
-    mvpMatrix.lookAt(EYE[0], EYE[1], EYE[2], 0, 0, 0, 0, 1, 0);
-    mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
-    mvpMatrix.rotate(currentAngle[1], 0.0, 1.0, 0.0); // Rotation around y-axis
+    mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
+    //mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
  
     cameraTransformations.setIdentity();
-    cameraTransformations.lookAt(EYE[0], EYE[1], EYE[2], 0, 0, 0, 0, 1, 0);
-    cameraTransformations.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
-    cameraTransformations.rotate(currentAngle[1], 0.0, 1.0, 0.0); // Rotation around y-axis
+    cameraTransformations.lookAt(eye[0], eye[1], eye[2], 0, 0, 0, 0, 1, 0);
 
     // Pass the model view projection matrix to u_MvpMatrix
     gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
@@ -147,17 +131,16 @@ function main() {
     var mdlMatrix = new Matrix4();
     mdlMatrix.setIdentity();
 
-    var new_eye = getTransformedFloat32Array(cameraTransformations, EYE);
+    var new_eye = getTransformedFloat32Array(cameraTransformations, eye);
 
     setupLight(gl, new_eye);
 	
     var now = Date.now();
-    animateBCube(now, bCubeMatrix);
     var fps = getFPS(now);
     last = now;
 
-    drawRoom(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix);
-    draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
+    drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix);
+    //draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
     requestAnimationFrame(tick, canvas);
   }
   tick();
@@ -168,6 +151,8 @@ function main() {
   var GRAY=new Float32Array([0.5, 0.5, 0.5]);
   var SILVER=new Float32Array([0.75, 0.75, 0.75]);
   var BLACK=new Float32Array([0.0, 0.0, 0.0]);
+  var OCEAN_BLUE=new Float32Array([0.11, 0.42, 0.63]);
+  var SKY_BLUE=new Float32Array([0.32, 0.62, 0.83]);
   var BLUE=new Float32Array([0.0, 0.0, 1.0]);
   var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
   var GREEN=new Float32Array([0.0, 1.0, 0.0]);
@@ -179,69 +164,14 @@ function getInverseTranspose(mat4){
 	return m;
 }
 
-function drawRoom(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix){
-
-  //Walls
-  gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrix.elements);
-  cubeColors=[null, null, null, RED, GRAY, RED];
-  gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrix).elements);
-  drawCube(gl, cubeColors, -1);
-
-  //Cube
-  drawBouncingCube(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix,bCubeMatrix);
-
-  //Table
-  mdlMatrix.translate(table_x, -0.6, table_z);
-  drawTable(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
-
-  //light source
-  drawLightSource(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix);
-}
-
-function drawBouncingCube(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix) {
+function drawOcean(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix, bCubeMatrix){
+  //ocean
   mdlMatrixChild=new Matrix4(mdlMatrix);
-  mdlMatrixChild.scale(0.1, 0.1, 0.1);
-  mdlMatrixChild.multiply(bCubeMatrix);
+  mdlMatrixChild.scale(100.0, 1.0, 100.0);
   gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors = [GREEN, GREEN, GREEN, GREEN, GREEN, GREEN];
-  drawCube(gl, cubeColors, 1);
-}
-
-function drawLightSource(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix) {
-  mdlMatrixChild=new Matrix4(mdlMatrix); 
-  mdlMatrixChild.translate(0.0, 0.2, 0.0);
-  mdlMatrixChild.scale(0.02, 0.02, 0.02);
-  gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors = [YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW];
+  cubeColors=[null, null, null, null, OCEAN_BLUE, null];
   drawCube(gl, cubeColors, -1);
-}
-
-function drawTable(gl, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
-
-  mdlMatrixChild=new Matrix4(mdlMatrix); 
-  mdlMatrixChild.scale(0.2, 0.01, 0.2);
-  gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[BLUE, BLUE, BLUE, BLUE, BLUE, BLUE];
-  drawCube(gl, cubeColors, 1);
-  
-  mdlMatrixChild=new Matrix4(mdlMatrix); 	
-  mdlMatrixChild.translate(0.00, -0.2, 0.0);
-  mdlMatrixChild.scale(0.01, 0.2, 0.01);
-  gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[BLACK, BLACK, BLACK, BLACK, BLACK, BLACK];
-  drawCube(gl, cubeColors, 1);
-  
-  mdlMatrixChild=new Matrix4(mdlMatrix); 	
-  mdlMatrixChild.translate(0.00, -0.4, 0.0);
-  mdlMatrixChild.scale(0.1, 0.01, 0.1);
-  gl.uniformMatrix4fv(u_MdlMatrix, false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(u_NMdlMatrix, false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[SILVER, SILVER, SILVER, SILVER, SILVER, SILVER];
-  drawCube(gl, cubeColors, 1);
 }
 
 function initArrayBuffer(gl, data, num, type, attribute) {
@@ -296,22 +226,22 @@ function setupLight(gl, eye, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
 		return;
 	}
 	
-	// Get the storage location of u_Eye
-	var u_Eye = gl.getUniformLocation(gl.program, 'u_Eye');
-	if (!u_Eye) {
-		console.log('Failed to get the storage location of u_Eye');
+	// Get the storage location of u_eye
+	var u_eye = gl.getUniformLocation(gl.program, 'u_eye');
+	if (!u_eye) {
+		console.log('Failed to get the storage location of u_eye');
 		return;
 	}
 	
 	gl.uniform4f(u_Ambient, 0.2, 0.2, 0.2, 1.0);
 
-	gl.uniform4f(u_Diffuse, 0.8, 0.8, 0.8, 1.0);
+	gl.uniform4f(u_Diffuse, 1.0, 1.0, 1.0, 1.0);
 	
-	gl.uniform4f(u_Specular, 1.0, 1.0, 0.0, 1.0);
+	gl.uniform4f(u_Specular, 1.0, 1.0, 0.5, 1.0);
 	
-	gl.uniform4f(u_LightLocation, table_x, light_y, table_z, 1.0);
+	gl.uniform4f(u_LightLocation, sun[0], sun[1], sun[2], 1.0);
 	
-	gl.uniform4f(u_Eye, eye[0], eye[1], eye[2], 1.0);
+	gl.uniform4f(u_eye, eye[0], eye[1], eye[2], 1.0);
 }
 
 function getTransformedFloat32Array(matrix, array) {
@@ -323,49 +253,9 @@ function getTransformedFloat32Array(matrix, array) {
       + matrix.elements[i*4 + 3] * 1;
   }
   return newArray;
-
-}
-
-function translateBCube(matrix, elapsedTime) {
-  for(var i = 0; i < 3; i++) {
-    if((bCubeDisp[i] >= 9 && bCubeVel[i] > 0) || (bCubeDisp[i] <= -9 && bCubeVel[i] < 0)) {
-      bCubeVel[i] *= -1;
-      newBCubeRotation();
-    }
-    bCubeDisp[i] += bCubeVel[i]*elapsedTime/1000;
-  }
-
-  matrix.translate(bCubeDisp[0], bCubeDisp[1], bCubeDisp[2]);
-}
-
-function rotateBCube(matrix, elapsedTime) {
-
-  bCubeAngle += bCubeRot[0] * elapsedTime;
-
-  matrix.rotate(bCubeAngle, bCubeRot[1], bCubeRot[2], bCubeRot[2]); // Rotation around y-axis
-  
 }
 
 var last = Date.now();
-
-function animateBCube(now, bCubeMatrix) {
-  var now = Date.now();   // Calculate the elapsed time
-  var elapsed = now - last;
-  bCubeMatrix.setIdentity();
-  translateBCube(bCubeMatrix, elapsed);
-  rotateBCube(bCubeMatrix, elapsed);
-}
-
-function newBCubeRotation() {
-  bCubeRot[0] = (Math.random() - 0.5);
-
-  do {
-    bCubeRot[1] = Math.random();
-    bCubeRot[2] = Math.random();
-    bCubeRot[3] = Math.random();
-  }
-  while(bCubeRot[1] === 0.0 && bCubeRot[2] === 0.0 && bCubeRot[3] === 0.0)
-}
 
 function getFPS(now) {
   var elapsed = now - last;
@@ -378,4 +268,12 @@ function getFPS(now) {
   var fps = frame_set.length/total_time * 1000;
   return fps;
 
+}
+
+function normalizeVec(vector) {
+  var length = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
+  for(var i = 0; i < 3; i++) {
+    vector[i] = vector[i]/length;
+  }
+  return vector[i];
 }
