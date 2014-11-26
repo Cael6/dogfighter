@@ -47,7 +47,7 @@ var frame_set;
 var sun = [10.0, 10.0, 0.0];
 var eye = new Float32Array([0.0, 6.0, 0.0]);
 var gaze = new Float32Array([0.0, 0.0, 1.0]);
-var up_vec = new Float32Array([0.0, 1.0, 1.0]);
+var up_vec = new Float32Array([0.0, 1.0, 0.0]);
 
 function main() {
 
@@ -116,6 +116,7 @@ function main() {
   var tick = function(){
 
     mvpMatrix.setPerspective(30, 1, 1, 100);
+    console.log(up_vec);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
     //mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
  
@@ -276,4 +277,12 @@ function normalizeVec(vector) {
     vector[i] = vector[i]/length;
   }
   return vector[i];
+}
+
+function crossProduct(vec1, vec2) {
+  var new_vec = new Float32Array(3);
+  new_vec[0] = vec1[1]* vec2[2] - vec1[2] * vec2[1];
+  new_vec[1] = vec1[2] * vec2[0] - vec1[0] * vec2[2];
+  new_vec[2] = vec1[0] * vec2[1] - vec1[1] * vec2[0];
+  return new_vec;
 }
