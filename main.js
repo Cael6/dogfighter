@@ -314,61 +314,6 @@ function setupLight(gl, eye, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
 	gl.uniform4f(u_Eye, eye[0], eye[1], eye[2], 1.0);
 }
 
-function initEventHandlers(canvas, currentAngle) {
-  var dragging = false;         // Dragging or not
-  var lastX = -1, lastY = -1;   // Last position of the mouse
-
-  canvas.onmousedown = function(ev) {   // Mouse is pressed
-    var x = ev.clientX, y = ev.clientY;
-    // Start dragging if a moue is in <canvas>
-    var rect = ev.target.getBoundingClientRect();
-    if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
-      lastX = x; lastY = y;
-      dragging = true;
-    }
-  };
-
-  canvas.onmouseup = function(ev) { dragging = false;  }; // Mouse is released
-
-  canvas.onmousemove = function(ev) { // Mouse is moved
-    var x = ev.clientX, y = ev.clientY;
-    if (dragging) {
-      var factor = 100/canvas.height; // The rotation ratio
-      var dx = factor * (x - lastX);
-      var dy = factor * (y - lastY);
-      // Limit x-axis rotation angle to -90 to 90 degrees
-      currentAngle[0] = Math.max(Math.min(currentAngle[0] + dy, 90.0), -90.0);
-      currentAngle[1] = currentAngle[1] + dx;
-    }
-    lastX = x, lastY = y;
-  };
-
-  window.onkeypress = function(ev) {
-    switch(String.fromCharCode(ev.charCode)) {
-      case "w": //w
-        if(table_x < 0.75) {
-          table_x += move_speed;
-        }
-        break;
-      case "s": //s
-        if(table_x > -0.75) {
-          table_x -= move_speed;
-        }
-        break;
-      case "a": //a
-        if(table_z > -0.75) {
-          table_z -= move_speed;
-        }
-        break;
-      case "d": //d
-        if(table_z < 0.75) {
-          table_z += move_speed;
-        }
-        break;
-    }
-  }
-}
-
 function getTransformedFloat32Array(matrix, array) {
   var newArray = new Float32Array(3);
   for(var i = 0; i < 4; i++) {
