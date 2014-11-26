@@ -108,10 +108,24 @@ function initEventHandlers() {
 
 function w_step() {
 	//Increase throttle
+	gaze = normalizeVec(gaze);
+	for(var i = 0; i < 3; i++) {
+		eye[i] = eye[i] + gaze[i]/5;
+	}
+	if(w_down) {
+		setTimeout(w_step, 50);
+	}
 }
 
 function s_step() {
 	//Decrease throttle
+	gaze = normalizeVec(gaze);
+	for(var i = 0; i < 3; i++) {
+		eye[i] = eye[i] - gaze[i]/5;
+	}
+	if(s_down) {
+		setTimeout(s_step, 50);
+	}
 }
 
 function a_step() {

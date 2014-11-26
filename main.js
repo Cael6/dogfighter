@@ -115,7 +115,6 @@ function main() {
   var tick = function(){
 
     mvpMatrix.setPerspective(45, 1, 1, 100);
-    console.log(up_vec);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
     //mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
  
@@ -282,11 +281,12 @@ function getFPS(now) {
 }
 
 function normalizeVec(vector) {
+  var new_vec = new Float32Array(3);
   var length = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
   for(var i = 0; i < 3; i++) {
-    vector[i] = vector[i]/length;
+    new_vec[i] = vector[i]/length;
   }
-  return vector[i];
+  return new_vec;
 }
 
 function crossProduct(vec1, vec2) {
