@@ -38,7 +38,7 @@ function getNormalsFromVertices(vertices, row_size, row_count) {
 		v2[0] = vertices[i*row_size + 6] - vertices[i*row_size];
 		v2[1] = vertices[i*row_size + 7] - vertices[i*row_size + 1];
 		v2[2] = vertices[i*row_size + 8] - vertices[i*row_size + 2];
-		var cp = crossProduct(v1, v2);
+		var cp = crossProduct(v2, v1);
 		for(var j = 0; j < row_size; j++) {
 			for(var k = 0; k < 3; k++) {
 				normals[i*row_size * 4 + j * 4 + k] = cp[k];

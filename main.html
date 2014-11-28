@@ -66,7 +66,11 @@
           gl_FragColor = v_Color*lighting;
         } else {
           float alpha_factor = max(1.0 - sqrt(pow(v_Position.x/20.0,2.0) + pow((v_Position.y - 10.0)/20.0,2.0)),0.0);
-          gl_FragColor = v_Color*vec4(1.0, 1.0, 1.0, alpha_factor);
+          if(alpha_factor > 0.0) {
+            gl_FragColor = v_Color*vec4(alpha_factor, alpha_factor, alpha_factor, alpha_factor);
+          } else {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+          }
         }
       }
     </script>

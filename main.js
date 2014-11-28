@@ -20,6 +20,8 @@ var SKY_BLUE=new Float32Array([0.32, 0.62, 0.83]);
 var BLUE=new Float32Array([0.0, 0.0, 1.0]);
 var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
 var GREEN=new Float32Array([0.0, 1.0, 0.0]);
+var SUN_YELLOW=new Float32Array([0.9, 0.8, 0.4]);
+var PLANE_COLOR=new Float32Array([0.1, 0.1, 0.2]);
 
 var sun = [0.0, 10.0, 200.0];
 var sun_size = 20.0;
@@ -31,7 +33,7 @@ var gaze = new Float32Array([0.0, 0.0, 1.0]);
 var up_vec = new Float32Array([0.0, 1.0, 0.0]);
 //var up_vec = new Float32Array([0.0, 0.0, 1.0]); //debug
 var buildings = [new Float32Array([20.0, 2.5, 50.0]), new Float32Array([-30.0, 2.5, 30.0])];
-var build_colours = [BLUE, RED];
+var build_colours = [SILVER, SILVER];
 
 function main() {
 
@@ -63,8 +65,11 @@ function main() {
   }
 
   // Set the clear color and enable the depth test
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+  gl.clearColor(SKY_BLUE[0], SKY_BLUE[1], SKY_BLUE[2], 1.0);
   gl.enable(gl.DEPTH_TEST);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.enable(gl.BLEND);
 
 
   var uniforms = new Array();
@@ -107,8 +112,6 @@ function main() {
 
 
   initEventHandlers();
-
-  gl.clearColor(SKY_BLUE[0], SKY_BLUE[1], SKY_BLUE[2], 1.0);
   
   var tick = function(){
 
@@ -137,7 +140,10 @@ function main() {
     drawOcean(gl, uniforms, mdlMatrix);
     drawSun(gl, uniforms, mdlMatrix);
     drawBuildings(gl, uniforms, mdlMatrix);
-    drawPlane(gl, uniforms, mdlMatrix);
+    drawPlane(gl, uniforms, mdlMatrix, false);
+
+    //own plane
+    drawPlane(gl, uniforms, mdlMatrix, true);
     draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
     requestAnimationFrame(tick, canvas);
   }
@@ -160,7 +166,7 @@ function drawOcean(gl, uniforms, mdlMatrix){
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   gl.uniform1f(uniforms['u_isSun'], 0.0);
-  cubeColors=[null, null, null, null, WHITE, false];
+  cubeColors=[null, null, null, null, OCEAN_BLUE, false];
   drawCube(gl, cubeColors, -1);
 }
 
@@ -172,7 +178,7 @@ function drawSun(gl, uniforms, mdlMatrix) {
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   gl.uniform1f(uniforms['u_isSun'], 1.0);
-  cubeColors=[null, null, null, null, null, YELLOW];
+  cubeColors=[null, null, null, null, null, SUN_YELLOW];
   drawCube(gl, cubeColors, -1);
 }
 
@@ -190,14 +196,24 @@ function drawBuildings(gl, uniforms, mdlMatrix){
 	
 }
 
-function drawPlane(gl, uniforms, mdlMatrix) {
-  mdlMatrixChild=new Matrix4(mdlMatrix);
-  mdlMatrixChild.translate(0.0, 4.0, 20.0);
-  mdlMatrixChild.scale(3.0, 3.0, 5.0);
+function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
+  if(!isSelf) {
+    mdlMatrixChild=new Matrix4(mdlMatrix);
+    mdlMatrixChild.translate(0.0, 4.0, 20.0);
+    mdlMatrixChild.scale(3.0, 3.0, 5.0);
+  } else {
+    mdlMatrixChild = new Matrix4(mdlMatrix);
+    mdlMatrixChild.translate(eye[0] + gaze[0]/2.0, eye[1] - gaze[1]/2, eye[2]+ gaze[2]/2.0);
+    mdlMatrixChild.rotate(-90.0, 0.0, 1.0, 0.0);
+    // mdlMatrixChild.lookAt(0.0, 0.0, 0.0, eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
+    
+    
+
+  }
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   gl.uniform1f(uniforms['u_isSun'], 0.0);
-  drawPlaneObj(gl, RED, 1);
+  drawPlaneObj(gl, PLANE_COLOR, 1);
 }
 
 function initArrayBuffer(gl, data, num, type, attribute) {
@@ -263,7 +279,7 @@ function setupLight(gl, eye, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
 
 	gl.uniform4f(u_Diffuse, 1.0, 1.0, 1.0, 1.0);
 	
-	gl.uniform4f(u_Specular, 0.97, 0.57, 0.0, 1.0);
+	gl.uniform4f(u_Specular, SUN_YELLOW[0], SUN_YELLOW[1], SUN_YELLOW[2], 1.0);
 	
 	gl.uniform4f(u_LightLocation, sun[0], sun[1], sun[2], 1.0);
 	
