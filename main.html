@@ -55,21 +55,26 @@
       uniform vec4 u_Specular;
       uniform vec4 u_LightLocation;
       uniform float u_isSun;
+      uniform float u_isPlane;
       varying vec4 vLighting;
       
       void main() {
         float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
         float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
-        vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 2.0));
+        vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 256.0));
 
+        
+        
         if(u_isSun == 0.0) {
-          gl_FragColor = v_Color*lighting;
+            gl_FragColor = v_Color*lighting;
         } else {
-          float alpha_factor = max(1.0 - sqrt(pow(v_Position.x/20.0,2.0) + pow((v_Position.y - 10.0)/20.0,2.0)),0.0);
+          float alpha_factor = max(1.0 - sqrt(pow(v_Position.x/20.0,2.0) + pow((v_Position.y - 20.0)/20.0,2.0)),0.0);
           if(alpha_factor > 0.0) {
             gl_FragColor = v_Color*vec4(alpha_factor, alpha_factor, alpha_factor, alpha_factor);
           } else {
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+            if(u_isPlane == 0.0 || u_isPlane != 0.0){
+              gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+            }
           }
         }
       }

@@ -18,6 +18,24 @@ function normalizeVec(vector) {
   return new_vec;
 }
 
+function dotProduct(vec1, vec2){
+  return vec1[0]*vec2[0] + vec1[1]*vec2[1] + vec1[2]*vec2[2];
+}
+
+function vecLength(vec){
+  return Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+}
+
+function angleBetween(vec1, vec2){
+  var dot = dotProduct(vec1, vec2);
+  var productLength = vecLength(vec1) * vecLength(vec2);
+  if(productLength != 0.0){
+    return Math.acos(dot/productLength)*(180/Math.PI);
+  } else {
+    return 0.0;
+  }
+}
+
 function crossProduct(vec1, vec2) {
   var new_vec = new Float32Array(3);
   new_vec[0] = vec1[1]* vec2[2] - vec1[2] * vec2[1];
@@ -47,4 +65,52 @@ function getNormalsFromVertices(vertices, row_size, row_count) {
 		}
 	}
 	return normals;
+}
+
+function addVec(vec1, vec2) {
+  return new Float32Array([vec1[0] + vec2[0], vec1[1] + vec2[1], vec1[2] + vec2[2]]);
+}
+
+function subVec(vec1, vec2) {
+  return new Float32Array([vec1[0] - vec2[0], vec1[1] - vec2[1], vec1[2] - vec2[2]]);
+}
+
+function getLookAtTrans(pos1, pos2) {
+  var w = subVec(pos2, pos1);
+  w = normalizeVec(w);
+  
+  var t;
+  if(w[1] == w[2] && w[1] == 0 ) {
+    t = addVec(w, new Float32Array([0.0,1.0,0.0]));
+  } else {
+    t = addVec(w, new Float32Array([1.0,0.0,0.0]));
+  }
+  
+  var u = normalizeVec(crossProduct(t,w));
+  var v = normalizeVec(crossProduct(u,w));
+  
+  if(w[2] > 0) {
+    u = subVec(new Float32Array([0.0,0.0,0.0]), u);
+  }
+  
+  var trans = new Matrix4();
+  trans.elements[0] = w[0];
+  trans.elements[1] = w[1];
+  trans.elements[2] = w[2];
+  trans.elements[3] = 0.0;
+  trans.elements[4] = u[0];
+  trans.elements[5] = u[1];
+  trans.elements[6] = u[2];
+  trans.elements[7] = 0.0;
+  trans.elements[8] = v[0];
+  trans.elements[9] = v[1];
+  trans.elements[10] = v[2];
+  trans.elements[11] = 0.0;
+  trans.elements[12] = 0.0;
+  trans.elements[13] = 0.0;
+  trans.elements[14] = 0.0;
+  trans.elements[15] = 1.0;
+  
+  
+  return trans;
 }

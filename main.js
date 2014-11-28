@@ -23,20 +23,25 @@ var GREEN=new Float32Array([0.0, 1.0, 0.0]);
 var SUN_YELLOW=new Float32Array([0.9, 0.8, 0.4]);
 var PLANE_COLOR=new Float32Array([0.1, 0.1, 0.2]);
 
-var sun = [0.0, 10.0, 200.0];
+var sun = [0.0, 20.0, 200.0];
 var sun_size = 20.0;
 var sun_angle = 0.0;
-var eye = new Float32Array([0.0, 6.0, 0.0]);
-//var eye = new Float32Array([0.0, 130.0, 0.0]); //debug
+var eye = new Float32Array([0.0, 4.0, -10.0]);
 var gaze = new Float32Array([0.0, 0.0, 1.0]);
-//var gaze = new Float32Array([0.0, -1.0, 0.0]); //debug
 var up_vec = new Float32Array([0.0, 1.0, 0.0]);
+//var eye = new Float32Array([0.0, 130.0, 0.0]); //debug
+//var gaze = new Float32Array([0.0, -1.0, 0.0]); //debug
 //var up_vec = new Float32Array([0.0, 0.0, 1.0]); //debug
+
+var pl_pos = new Float32Array([0.0, 6.0, 10.0]);
+var pl_dir = new Float32Array([1.0, 0.0, 0.0]);
+var pl_up = new Float32Array([0.0, 1.0, 0.0]);
+
 var buildings = [new Float32Array([20.0, 2.5, 50.0]), new Float32Array([-30.0, 2.5, 30.0])];
 var build_colours = [SILVER, SILVER];
 
 function main() {
-
+  
   frame_set = new Array();
 
   // Retrieve <canvas> element
@@ -106,9 +111,15 @@ function main() {
   }
   uniforms['u_isSun'] = u_isSun;
 
+  var u_isPlane = gl.getUniformLocation(gl.program, 'u_isPlane');
+  if(!u_isPlane) {
+    console.log('Failed to get the storage location of u_isPlane');
+    return;
+  }
+  uniforms['u_isPlane'] = u_isPlane;
+
   // Set the eye point and the viewing volume
   var mvpMatrix = new Matrix4();
-  var cameraTransformations = new Matrix4();
 
 
   initEventHandlers();
@@ -118,9 +129,7 @@ function main() {
     mvpMatrix.setPerspective(65, 1, 1, 300);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
     //mvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
- 
-    cameraTransformations.setIdentity();
-    cameraTransformations.lookAt(eye[0], eye[1], eye[2], 0, 0, 0, 0, 1, 0);
+
 
     // Pass the model view projection matrix to u_MvpMatrix
     gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
@@ -143,7 +152,7 @@ function main() {
     drawPlane(gl, uniforms, mdlMatrix, false);
 
     //own plane
-    drawPlane(gl, uniforms, mdlMatrix, true);
+    //drawPlane(gl, uniforms, mdlMatrix, true);
     draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
     requestAnimationFrame(tick, canvas);
   }
@@ -162,11 +171,12 @@ function getInverseTranspose(mat4){
 function drawOcean(gl, uniforms, mdlMatrix){
   //ocean
   mdlMatrixChild=new Matrix4(mdlMatrix);
-  mdlMatrixChild.scale(100.0, 1.0, 100.0);
+  mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   gl.uniform1f(uniforms['u_isSun'], 0.0);
-  cubeColors=[null, null, null, null, OCEAN_BLUE, false];
+  gl.uniform1f(uniforms['u_isPlane'], 0.0);
+  cubeColors=[null, null, null, null, OCEAN_BLUE, null];
   drawCube(gl, cubeColors, -1);
 }
 
@@ -178,6 +188,7 @@ function drawSun(gl, uniforms, mdlMatrix) {
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   gl.uniform1f(uniforms['u_isSun'], 1.0);
+  gl.uniform1f(uniforms['u_isPlane'], 0.0);
   cubeColors=[null, null, null, null, null, SUN_YELLOW];
   drawCube(gl, cubeColors, -1);
 }
@@ -190,6 +201,7 @@ function drawBuildings(gl, uniforms, mdlMatrix){
     gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
     gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
     gl.uniform1f(uniforms['u_isSun'], 0.0);
+  gl.uniform1f(uniforms['u_isPlane'], 0.0);
     cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
     drawCube(gl, cubeColors, 1);
 	}
@@ -197,23 +209,25 @@ function drawBuildings(gl, uniforms, mdlMatrix){
 }
 
 function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
-  if(!isSelf) {
-    mdlMatrixChild=new Matrix4(mdlMatrix);
-    mdlMatrixChild.translate(0.0, 4.0, 20.0);
-    mdlMatrixChild.scale(3.0, 3.0, 5.0);
-  } else {
-    mdlMatrixChild = new Matrix4(mdlMatrix);
-    mdlMatrixChild.translate(eye[0] + gaze[0]/2.0, eye[1] - gaze[1]/2, eye[2]+ gaze[2]/2.0);
-    mdlMatrixChild.rotate(-90.0, 0.0, 1.0, 0.0);
-    // mdlMatrixChild.lookAt(0.0, 0.0, 0.0, eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
-    
-    
-
-  }
+  //console.log(diff);
+  mdlMatrixChild=new Matrix4(mdlMatrix);
+  //console.log(rotVec);
+  mdlMatrixChild.translate(pl_pos[0], pl_pos[1], pl_pos[2]);
+  mdlMatrixChild.multiply(getLookAtTrans(pl_pos, eye));
+  //console.log(mdlMatrixChild.elements);
+  //mdlMatrixChild.rotate(-90, 0, 1, 0);
+  
+  //mdlMatrixChild.lookAt(0.0, 0.0, 0.0, eye[0], eye[1], eye[2], pl_up[0], pl_up[1], pl_up[2]);
+  
+  mdlMatrixChild.scale(3.0, 3.0, 5.0);
+  //console.log(mdlMatrixChild.elements);
+  
+  
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   gl.uniform1f(uniforms['u_isSun'], 0.0);
-  drawPlaneObj(gl, PLANE_COLOR, 1);
+  gl.uniform1f(uniforms['u_isPlane'], 1.0);
+  drawPlaneObj(gl, [RED, BLUE, YELLOW, BLACK, WHITE, SILVER], 1);
 }
 
 function initArrayBuffer(gl, data, num, type, attribute) {
@@ -275,7 +289,7 @@ function setupLight(gl, eye, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
 		return;
 	}
 	
-	gl.uniform4f(u_Ambient, 0.4, 0.4, 0.4, 1.0);
+	gl.uniform4f(u_Ambient, 0.25, 0.25, 0.25, 1.0);
 
 	gl.uniform4f(u_Diffuse, 1.0, 1.0, 1.0, 1.0);
 	
@@ -297,7 +311,8 @@ function getFPS(now) {
     total_time += frame_set[i];
   }
   if(frame_count%15 == 0){
-    console.log(eye);
+    //console.log(pl_pos);
+    //console.log(eye);
   }
   var fps = frame_set.length/total_time * 1000;
   return fps;

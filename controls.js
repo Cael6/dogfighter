@@ -3,12 +3,14 @@ controls.js
 */
 
 var dRot = 4.0;
-var speed_fac = 0.5;
+var speed_fac = 2.0;
 
 var w_down = false;
 var s_down = false;
 var a_down = false;
 var d_down = false;
+var q_down = false;
+var e_down = false;
 var up_down = false;
 var down_down = false;
 var left_down = false;
@@ -68,6 +70,18 @@ function initEventHandlers() {
 			left_step();
 		}
       	break;
+      case 81: //q
+    if(!q_down){
+      q_down = true;
+      q_step();
+    }
+      break;
+      case 69: //e
+    if(!e_down){
+      e_down = true;
+      e_step();
+    }
+      break;
       case 39: //right
 		//Roll left (Change up vector)
 		if(!right_down) {
@@ -103,6 +117,12 @@ function initEventHandlers() {
       case 39: //right
       	right_down = false;
       	break;
+      case 81: //q
+        q_down = false;
+        break;
+      case 69: //e
+        e_down = false;
+        break;
       case 70: //f
       	resetView();
       	break;
@@ -130,6 +150,30 @@ function s_step() {
 	if(s_down) {
 		setTimeout(s_step, 50);
 	}
+}
+
+function q_step() {
+	//Decrease throttle
+	gaze = normalizeVec(gaze);
+  var cross = crossProduct(gaze, up_vec);
+	for(var i = 0; i < 3; i++) {
+		eye[i] = eye[i] - cross[i] * speed_fac;
+	}
+	if(q_down) {
+		setTimeout(q_step, 50);
+  }
+}
+
+function e_step() {
+	//Decrease throttle
+	gaze = normalizeVec(gaze);
+  var cross = crossProduct(gaze, up_vec);
+	for(var i = 0; i < 3; i++) {
+		eye[i] = eye[i] + cross[i] * speed_fac;
+	}
+	if(e_down) {
+		setTimeout(e_step, 50);
+  }
 }
 
 function a_step() {

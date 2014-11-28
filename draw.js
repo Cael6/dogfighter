@@ -139,8 +139,8 @@ function drawPlaneObj(gl, planeColors, normalDirection) {
   	var indicesTemp = [];
   	
   	for(i=0; i<6; i++){
-
-    	var faceColor=planeColors;
+      
+      var faceColor=planeColors[i];
 
     	if(null!=faceColor){
     		indicesTemp.push(i*3);
