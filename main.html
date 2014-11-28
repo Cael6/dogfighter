@@ -16,10 +16,11 @@
     <script src="lib/cuon-utils.js"></script>
     <script src="lib/cuon-matrix.js"></script>
     <script src="jquery-2.1.1.min.js"></script>
+    <script src="functions.js"></script>
     <script src="controls.js"></script>
     <script src="draw.js"></script>
     <script src="main.js"></script>
-    
+
     <script id="shader-vs" type="x-shader/x-vertex">
       attribute vec4 a_Position;
       attribute vec4 a_Color;
@@ -31,11 +32,14 @@
       varying vec4 v_Color;
       varying vec4 v_Position;
       varying vec4 v_Normal;
+
+      varying vec4 vLighting;
+
       void main() {
         gl_Position = u_MvpMatrix * u_MdlMatrix * a_Position;
-        v_Color = a_Color;
         v_Position = u_MdlMatrix * a_Position;
         v_Normal = u_NormalDirection * u_NMdlMatrix *a_Normal;
+        v_Color = a_Color;
       }
     </script>
     <script id="shader-fs" type="x-shader/x-fragment">
@@ -50,10 +54,20 @@
       uniform vec4 u_Diffuse;
       uniform vec4 u_Specular;
       uniform vec4 u_LightLocation;
+      uniform float u_isSun;
+      varying vec4 vLighting;
+      
       void main() {
         float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
         float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
-        gl_FragColor = v_Color*u_Ambient + v_Color*u_Diffuse*nDotL + v_Color*u_Specular*pow(hDotL, 1.0);
+        vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 2.0));
+
+        if(u_isSun == 0.0) {
+          gl_FragColor = v_Color*lighting;
+        } else {
+          float alpha_factor = max(1.0 - sqrt(pow(v_Position.x/20.0,2.0) + pow((v_Position.y - 10.0)/20.0,2.0)),0.0);
+          gl_FragColor = v_Color*vec4(1.0, 1.0, 1.0, alpha_factor);
+        }
       }
     </script>
   </body>

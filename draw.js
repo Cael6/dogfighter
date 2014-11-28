@@ -28,7 +28,6 @@ function drawCube(gl, cubeColors, normalDirection) {
     -1.0,-1.0,-1.0,   1.0,-1.0,-1.0,   1.0,-1.0, 1.0,  -1.0,-1.0, 1.0,  // v7-v4-v3-v2 down
      1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0   // v4-v7-v6-v5 back
   ]);
-  
   var normals = new Float32Array([   // Normal coordinates
      0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 1.0,0.0,  0.0,0.0, 1.0,0.0,   0.0,0.0, 1.0,0.0,  // v0-v1-v2-v3 front
      1.0, 0.0, 0.0,0.0,   1.0,0.0, 0.0,0.0,   1.0,0.0,0.0,0.0,   1.0, 0.0,0.0,0.0,  // v0-v3-v4-v5 right
@@ -116,4 +115,81 @@ function drawCube(gl, cubeColors, normalDirection) {
 
    // Draw the cube
   gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
+}
+
+function drawSphere(gl, sphereColor, normalDirection) {
+
+}
+
+function drawPlaneObj(gl, planeColors, normalDirection) {
+	var vertices = new Float32Array([   // Vertex coordinates
+    -1.0, 0.0, 1.0,   1.0, 0.0, 0.0,  -0.5, 0.5, 0.0,
+    -1.0, 0.0,-1.0,   1.0, 0.0, 0.0,  -0.5, 0.5, 0.0,
+    -1.0, 0.0, 1.0,  -0.5, 0.0, 0.0,  -0.5, 0.5, 0.0,
+    -1.0, 0.0,-1.0,  -0.5, 0.0, 0.0,  -0.5, 0.5, 0.0,
+    -1.0, 0.0, 1.0,  -0.5, 0.0, 0.0,  1.0, 0.0, 0.0,
+    -1.0, 0.0,-1.0,  -0.5, 0.0, 0.0,  1.0, 0.0, 0.0
+  ]);
+
+  if(!planeDrawn) {
+  	planeNs = getNormalsFromVertices(vertices, 3, 6);
+  	planeCs = new Float32Array(6*3*3);
+
+  	var BLACK=new Float32Array([0.0, 0.0, 0.0]);
+  	var indicesTemp = [];
+  	
+  	for(i=0; i<6; i++){
+
+    	var faceColor=planeColors;
+
+    	if(null!=faceColor){
+    		indicesTemp.push(i*3);
+    		indicesTemp.push(i*3+1);
+    		indicesTemp.push(i*3+2);
+    	} else {
+    		faceColor=BLACK;
+    	}
+    			
+    	for(j=0; j<3; j++){
+    		for(k=0; k<3; k++){
+    			planeCs[k+3*j+3*3*i]=faceColor[k];
+    		}		
+    	}
+  	}
+    planeIs = new Uint8Array(indicesTemp);
+    planeDrawn = true;
+  }
+
+  
+  
+  // Create a buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) 
+    return -1;
+
+  // Write the vertex coordinates and color to the buffer object
+  if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, 'a_Position'))
+    return -1;
+
+  if (!initArrayBuffer(gl, planeCs, 3, gl.FLOAT, 'a_Color'))
+    return -1;
+	
+  if (!initArrayBuffer(gl, planeNs, 4, gl.FLOAT, 'a_Normal'))
+    return -1;
+
+  // Write the indices to the buffer object
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, planeIs, gl.STATIC_DRAW);
+  
+  // Get the storage location of u_NormalDirection
+  var u_NormalDirection = gl.getUniformLocation(gl.program, 'u_NormalDirection');
+  if (!u_NormalDirection) {
+    console.log('Failed to get the storage location of u_NormalDirection');
+    return;
+  }
+  
+  gl.uniform1f(u_NormalDirection, normalDirection);
+
+   // Draw the cube
+  gl.drawElements(gl.TRIANGLES, planeIs.length, gl.UNSIGNED_BYTE, 0);
 }
