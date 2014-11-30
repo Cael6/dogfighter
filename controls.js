@@ -3,7 +3,7 @@ controls.js
 */
 
 var dRot = 4.0;
-var speed_fac = 2.0;
+var speed_fac = 0.75;
 
 var w_down = false;
 var s_down = false;

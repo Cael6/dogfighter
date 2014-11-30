@@ -193,3 +193,61 @@ function drawPlaneObj(gl, planeColors, normalDirection) {
    // Draw the cube
   gl.drawElements(gl.TRIANGLES, planeIs.length, gl.UNSIGNED_BYTE, 0);
 }
+
+function drawRadar(ctx, gaze){
+  var xPos = 730; //position of the center of the radar
+  var yPos = 530;
+  var width = 100;
+  var height = 100;
+  
+  //black square
+  ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Set white to the color of letters
+  ctx.fillRect(xPos - width/2, yPos - height/2, width, height);
+  
+  //draw compass
+  var dir = new Float32Array([gaze[0], gaze[1], gaze[2]]);
+  dir = scaleVec(normalizeVec(dir), 30);
+
+  ctx.beginPath();
+  ctx.moveTo(xPos, yPos);
+  ctx.lineTo(xPos + dir[0], yPos - dir[2]);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+  ctx.stroke();
+  
+  
+}
+
+function drawHUD(ctx, pl_pos){
+  var crossRad = 30.0;
+  var innerRad = 10.0;
+  var posX = 400.0;
+  var posY = 300.0;
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+
+  ctx.beginPath();
+  ctx.moveTo(posX, posY + innerRad);
+  ctx.lineTo(posX, posY + crossRad);
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(posX, posY - innerRad);
+  ctx.lineTo(posX, posY - crossRad);
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(posX - innerRad, posY);
+  ctx.lineTo(posX - crossRad, posY);
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(posX + innerRad, posY);
+  ctx.lineTo(posX + crossRad, posY);
+  ctx.closePath();
+  ctx.stroke();
+  
+}

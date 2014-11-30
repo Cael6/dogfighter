@@ -75,6 +75,10 @@ function subVec(vec1, vec2) {
   return new Float32Array([vec1[0] - vec2[0], vec1[1] - vec2[1], vec1[2] - vec2[2]]);
 }
 
+function scaleVec(vec, scale){
+  return new Float32Array([vec[0] * scale, vec[1] * scale, vec[2] * scale]);
+}
+
 function getLookAtTrans(pos1, pos2) {
   var w = subVec(pos2, pos1);
   w = normalizeVec(w);
