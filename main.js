@@ -135,7 +135,6 @@ function main() {
   // Set the eye point and the viewing volume
   var mvpMatrix = new Matrix4();
 
-
   initEventHandlers();
 
   var tick = function(){
@@ -170,7 +169,7 @@ function main() {
     drawRadar(ctx, gaze);
     drawHUD(ctx, pl_pos);
     draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
-
+    oppMoveTow(eye);
     requestAnimationFrame(tick, canvas);
   }
   tick();
