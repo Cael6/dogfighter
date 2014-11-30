@@ -22,6 +22,7 @@ var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
 var GREEN=new Float32Array([0.0, 1.0, 0.0]);
 var SUN_YELLOW=new Float32Array([0.9, 0.8, 0.4]);
 var PLANE_COLOR=new Float32Array([0.1, 0.1, 0.2]);
+var SAND =new Float32Array([1.0, 1.0, 0.59]);
 
 
 var sun_size = 20.0;
@@ -132,6 +133,13 @@ function main() {
   }
   uniforms['u_isBuilding'] = u_isBuilding;
 
+  var u_isWater = gl.getUniformLocation(gl.program, 'u_isWater');
+  if(!u_isWater) {
+    console.log('Failed to get the storage location of u_isWater');
+    return;
+  }
+  uniforms['u_isWater'] = u_isWater;
+
   // Set the eye point and the viewing volume
   var mvpMatrix = new Matrix4();
 
@@ -158,6 +166,7 @@ function main() {
     last = now;
 
     drawOcean(gl, uniforms, mdlMatrix);
+    drawGround(gl, uniforms, mdlMatrix);
     drawSun(gl, uniforms, mdlMatrix);
     drawBuildings(gl, uniforms, mdlMatrix);
     drawPlane(gl, uniforms, mdlMatrix, false);
@@ -169,7 +178,7 @@ function main() {
     drawRadar(ctx, gaze);
     drawHUD(ctx, pl_pos);
     draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
-    oppMoveTow(eye);
+    //oppMoveTow(eye);
     requestAnimationFrame(tick, canvas);
   }
   tick();
@@ -193,7 +202,23 @@ function drawOcean(gl, uniforms, mdlMatrix){
   gl.uniform1f(uniforms['u_isSun'], 0.0);
   gl.uniform1f(uniforms['u_isPlane'], 0.0);
   gl.uniform1f(uniforms['u_isBuilding'], 0.0);
+  gl.uniform1f(uniforms['u_isWater'], 1.0);
   cubeColors=[null, null, null, null, OCEAN_BLUE, null];
+  drawCube(gl, cubeColors, -1);
+}
+
+function drawGround(gl, uniforms, mdlMatrix){
+  //ground
+  mdlMatrixChild=new Matrix4(mdlMatrix);
+  mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
+  mdlMatrixChild.translate(0.0, -3.0, 0.0);
+  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+  gl.uniform1f(uniforms['u_isSun'], 0.0);
+  gl.uniform1f(uniforms['u_isPlane'], 0.0);
+  gl.uniform1f(uniforms['u_isBuilding'], 0.0);
+  gl.uniform1f(uniforms['u_isWater'], 0.0);
+  cubeColors=[null, null, null, null, SAND, null];
   drawCube(gl, cubeColors, -1);
 }
 
@@ -207,6 +232,7 @@ function drawSun(gl, uniforms, mdlMatrix) {
   gl.uniform1f(uniforms['u_isSun'], 1.0);
   gl.uniform1f(uniforms['u_isPlane'], 0.0);
   gl.uniform1f(uniforms['u_isBuilding'], 0.0);
+  gl.uniform1f(uniforms['u_isWater'], 0.0);
   cubeColors=[null, null, null, null, null, SUN_YELLOW];
   drawCube(gl, cubeColors, -1);
 }
@@ -221,6 +247,7 @@ function drawBuildings(gl, uniforms, mdlMatrix){
     gl.uniform1f(uniforms['u_isSun'], 0.0);
     gl.uniform1f(uniforms['u_isPlane'], 0.0);
     gl.uniform1f(uniforms['u_isBuilding'], 1.0);
+    gl.uniform1f(uniforms['u_isWater'], 0.0);
     cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
     drawCube(gl, cubeColors, 1);
 	}
@@ -239,6 +266,7 @@ function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   gl.uniform1f(uniforms['u_isSun'], 0.0);
   gl.uniform1f(uniforms['u_isPlane'], 1.0);
   gl.uniform1f(uniforms['u_isBuilding'], 0.0);
+  gl.uniform1f(uniforms['u_isWater'], 0.0);
   drawPlaneObj(gl, [RED, BLUE, YELLOW, BLACK, WHITE, SILVER], 1);
 }
 
