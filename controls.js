@@ -4,6 +4,9 @@ controls.js
 
 var dRot = 4.0;
 var speed_fac = 0.75;
+var accel = 0.5;
+var max_spd_fac = 2.0;
+var min_spd_fac = 0.5;
 
 var w_down = false;
 var s_down = false;
@@ -15,6 +18,7 @@ var up_down = false;
 var down_down = false;
 var left_down = false;
 var right_down = false;
+var space_down = false;
 
 var transformation = new Matrix4();
 
@@ -89,6 +93,12 @@ function initEventHandlers() {
 			right_step();
 		}
       	break;
+      case 32: //space
+      	if(!space_down){
+      		space_down = true;
+      		fire_step();
+      	}
+      break;
     }
   });
   $(window).keyup(function(ev) {
@@ -123,6 +133,9 @@ function initEventHandlers() {
       case 69: //e
         e_down = false;
         break;
+      case 32: //space
+      	space_down = false;
+      	break;
       case 70: //f
       	resetView();
       	break;
@@ -130,11 +143,33 @@ function initEventHandlers() {
   });
 }
 
+function constantSpeed(){
+	gaze = normalizeVec(gaze);
+	for(var i = 0; i < 3; i++) {
+		eye[i] = eye[i] + (gaze[i] * speed_fac);
+	}
+	setTimeout(constantSpeed, 50);
+}
+
+function getSpeedFac(){
+	return speed_fac;
+}
+
+function fire_step(){
+	console.log("POW");
+	if(space_down) {
+		setTimeout(fire_step, 200);
+	}
+}
+
 function w_step() {
 	//Increase throttle
 	gaze = normalizeVec(gaze);
 	for(var i = 0; i < 3; i++) {
-		eye[i] = eye[i] + gaze[i] * speed_fac;
+		//eye[i] = eye[i] + gaze[i] * speed_fac;
+		if(speed_fac <= max_spd_fac){
+			speed_fac += accel;
+		}
 	}
 	if(w_down) {
 		setTimeout(w_step, 50);
@@ -145,7 +180,10 @@ function s_step() {
 	//Decrease throttle
 	gaze = normalizeVec(gaze);
 	for(var i = 0; i < 3; i++) {
-		eye[i] = eye[i] - gaze[i] * speed_fac;
+		//eye[i] = eye[i] - gaze[i] * speed_fac;
+		if(speed_fac >= min_spd_fac){
+			speed_fac -= accel;
+		}
 	}
 	if(s_down) {
 		setTimeout(s_step, 50);

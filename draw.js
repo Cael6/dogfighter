@@ -3,7 +3,6 @@ draw.js
 */
 
 function draw2d(ctx, text) {
-  ctx.clearRect(0, 0, 400, 400); // Clear <hud>
   // Draw white letters
   ctx.font = '18px "Times New Roman"';
   ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Set white to the color of letters
@@ -250,4 +249,15 @@ function drawHUD(ctx, pl_pos){
   ctx.closePath();
   ctx.stroke();
   
+}
+
+function drawSpeed(ctx, speed){
+  var posX = 20.0; 
+  var posY = 480.0; 
+  var height = 100.0;
+  var width = 40.0;
+
+  //black square
+  ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Set white to the color of letters
+  ctx.fillRect(posX, posY, width, height);
 }

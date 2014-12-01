@@ -43,10 +43,9 @@ var buildings = [
   new Float32Array([100.0, 3.0, 100.0]), 
   new Float32Array([-100.0, 3.0, 100.0]),
   new Float32Array([100.0, 3.0, -100.0]),
-  new Float32Array([-100.0, 3.0, -100.0]),
-  new Float32Array([20.0, 3.0, 30.0])
+  new Float32Array([-100.0, 3.0, -100.0])
   ];
-var build_colours = [SILVER, SILVER, SILVER, SILVER, SILVER];
+var build_colours = [SILVER, SILVER, SILVER, SILVER];
 
 function main() {
   
@@ -145,6 +144,8 @@ function main() {
 
   initEventHandlers();
 
+  //constantSpeed();
+
   var tick = function(){
 
     mvpMatrix.setPerspective(75, 1, 1, 400);
@@ -175,9 +176,11 @@ function main() {
     //drawPlane(gl, uniforms, mdlMatrix, true);
 
     //draw 2d stuff
+    var spd = getSpeedFac();
+    drawSpeed(ctx, spd);
     drawRadar(ctx, gaze);
     drawHUD(ctx, pl_pos);
-    draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
+    //draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
     //oppMoveTow(eye);
     requestAnimationFrame(tick, canvas);
   }
