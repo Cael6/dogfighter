@@ -218,6 +218,14 @@ function drawRadar(ctx, gaze){
   ctx.closePath();
   ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
   ctx.stroke();
+
+  dir = subVec(pl_pos, eye);
+  ctx.beginPath();
+  ctx.moveTo(xPos, yPos);
+  ctx.lineTo(xPos + dir[0], yPos - dir[2]);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+  ctx.stroke();
   
 }
 
@@ -264,4 +272,7 @@ function drawSpeed(ctx, speed){
   //black square
   ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Set white to the color of letters
   ctx.fillRect(posX, posY, width, height);
+
+  ctx.fillStyle = 'rgba(255, 123, 0, 1)';
+  ctx.fillRect(posX + 2, posY + (height - height * speed/max_spd_fac) + 2, width - 4, height * speed/max_spd_fac - 4);
 }

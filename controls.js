@@ -3,10 +3,10 @@ controls.js
 */
 
 var dRot = 2.0;
-var speed_fac = 0.75;
-var accel = 0.5;
-var max_spd_fac = 2.0;
-var min_spd_fac = 0.5;
+var speed_fac = 4.0;
+var accel = 0.2;
+var max_spd_fac = 10.0;
+var min_spd_fac = 2.0;
 
 var w_down = false;
 var s_down = false;
@@ -158,122 +158,121 @@ function getSpeedFac(){
 function fire_step(){
 	if(space_down) {
 		fireBullet();
-		console.log(bullets);
-		setTimeout(fire_step, 500);
+		setTimeout(fire_step, 300);
 	}
 }
 
 function w_step() {
-	//Increase throttle
-	gaze = normalizeVec(gaze);
-	for(var i = 0; i < 3; i++) {
-		//eye[i] = eye[i] + gaze[i] * speed_fac;
-		if(speed_fac <= max_spd_fac){
-			speed_fac += accel;
-		}
-	}
 	if(w_down) {
+		//Increase throttle
+		gaze = normalizeVec(gaze);
+		for(var i = 0; i < 3; i++) {
+			//eye[i] = eye[i] + gaze[i] * speed_fac;
+			if(speed_fac <= max_spd_fac){
+				speed_fac += accel;
+			}
+		}
 		setTimeout(w_step, 50);
 	}
 }
 
 function s_step() {
-	//Decrease throttle
-	gaze = normalizeVec(gaze);
-	for(var i = 0; i < 3; i++) {
-		//eye[i] = eye[i] - gaze[i] * speed_fac;
-		if(speed_fac >= min_spd_fac){
-			speed_fac -= accel;
-		}
-	}
 	if(s_down) {
+		//Decrease throttle
+		gaze = normalizeVec(gaze);
+		for(var i = 0; i < 3; i++) {
+			//eye[i] = eye[i] - gaze[i] * speed_fac;
+			if(speed_fac >= min_spd_fac){
+				speed_fac -= accel;
+			}
+		}
 		setTimeout(s_step, 50);
 	}
 }
 
 function q_step() {
-	//Decrease throttle
-	gaze = normalizeVec(gaze);
-  var cross = crossProduct(gaze, up_vec);
-	for(var i = 0; i < 3; i++) {
-		eye[i] = eye[i] - cross[i] * speed_fac;
-	}
 	if(q_down) {
+		//Decrease throttle
+		gaze = normalizeVec(gaze);
+	  	var cross = crossProduct(gaze, up_vec);
+		for(var i = 0; i < 3; i++) {
+			eye[i] = eye[i] - cross[i] * speed_fac;
+		}
 		setTimeout(q_step, 50);
-  }
+  	}
 }
 
 function e_step() {
-	//Decrease throttle
-	gaze = normalizeVec(gaze);
-  var cross = crossProduct(gaze, up_vec);
-	for(var i = 0; i < 3; i++) {
-		eye[i] = eye[i] + cross[i] * speed_fac;
-	}
-	if(e_down) {
+    if(e_down) {
+    	//Decrease throttle
+    	gaze = normalizeVec(gaze);
+        var cross = crossProduct(gaze, up_vec);
+    	for(var i = 0; i < 3; i++) {
+    		eye[i] = eye[i] + cross[i] * speed_fac;
+    	}
 		setTimeout(e_step, 50);
-  }
+  	}
 }
 
 function a_step() {
-	transformation.setIdentity();
-	transformation.rotate(dRot, gaze[0], gaze[1], gaze[2]);
-	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
-	if(a_down) {
+    if(a_down) {
+    	transformation.setIdentity();
+    	transformation.rotate(dRot, gaze[0], gaze[1], gaze[2]);
+    	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
 		setTimeout(a_step, 50);
 	}
 }
 
 function d_step() {
-	//Roll right (Change up vector)
-	transformation.setIdentity();
-	transformation.rotate(-dRot, gaze[0], gaze[1], gaze[2]);
-	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
-	if(d_down) {
+    if(d_down) {
+    	//Roll right (Change up vector)
+    	transformation.setIdentity();
+    	transformation.rotate(-dRot, gaze[0], gaze[1], gaze[2]);
+    	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
 		setTimeout(d_step, 50);
 	}
 }
 
 function up_step() {
-	//shift gaze down (change up vector)
-	transformation.setIdentity();
-	var right_vec = crossProduct(gaze, up_vec);
-	transformation.rotate(dRot, right_vec[0], right_vec[1], right_vec[2]);
-	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
-	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
-	if(up_down) {
+    if(up_down) {
+    	//shift gaze down (change up vector)
+    	transformation.setIdentity();
+    	var right_vec = crossProduct(gaze, up_vec);
+    	transformation.rotate(dRot, right_vec[0], right_vec[1], right_vec[2]);
+    	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
+    	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
 		setTimeout(up_step, 50);
 	}
 }
 
 function down_step() {
-	//shift gaze up (campared to up vector)
-	transformation.setIdentity();
-	var right_vec = crossProduct(gaze, up_vec);
-	transformation.rotate(-dRot, right_vec[0], right_vec[1], right_vec[2]);
-	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
-	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
-	if(down_down) {
+    if(down_down) {
+    	//shift gaze up (campared to up vector)
+    	transformation.setIdentity();
+    	var right_vec = crossProduct(gaze, up_vec);
+    	transformation.rotate(-dRot, right_vec[0], right_vec[1], right_vec[2]);
+    	up_vec = normalizeVec(getTransformedFloat32Array(transformation, up_vec));
+    	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
 		setTimeout(down_step, 50);
 	}
 }
 
 function left_step() {
-	//shift gaze left
-	transformation.setIdentity();
-	transformation.rotate(-dRot, up_vec[0], up_vec[1], up_vec[2]);
-	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
-	if(left_down) {
+    if(left_down) {
+    	//shift gaze left
+    	transformation.setIdentity();
+    	transformation.rotate(-dRot, up_vec[0], up_vec[1], up_vec[2]);
+    	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
 		setTimeout(left_step, 50);
 	}
 }
 
 function right_step() {
-	//shift gaze right
-	transformation.setIdentity();
-	transformation.rotate(dRot, up_vec[0], up_vec[1], up_vec[2]);
-	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
-	if(right_down) {
+    if(right_down) {
+    	//shift gaze right
+    	transformation.setIdentity();
+    	transformation.rotate(dRot, up_vec[0], up_vec[1], up_vec[2]);
+    	gaze = normalizeVec(getTransformedFloat32Array(transformation, gaze));
 		setTimeout(right_step, 50);
 	}
 }

@@ -50,7 +50,7 @@ var build_colours = [SILVER, SILVER, SILVER, SILVER];
 
 var bullets = new Array();
 var bullet_speed = 100;
-var bullet_size = 0.05;
+var bullet_size = 0.1;
 
 function main() {
   
@@ -170,6 +170,7 @@ function main() {
     var now = Date.now();
     var fps = getFPS(now);
     animateBullets(now);
+    animateSelf(now);
     last = now;
 
     drawOcean(gl, uniforms, mdlMatrix);
@@ -188,7 +189,8 @@ function main() {
     drawRadar(ctx, gaze);
     drawHUD(ctx, pl_pos);
     //draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
-    //oppMoveTow(eye);
+
+    oppMoveTow(eye);
     requestAnimationFrame(tick, canvas);
   }
   tick();
@@ -408,4 +410,9 @@ function animateBullets(now) {
       i--;
     }
   }
+}
+
+function animateSelf(now) {
+  gaze = normalizeVec(gaze);
+  eye = addVec(eye, scaleVec(gaze, getSpeedFac() * (now - last) / 1000));
 }
