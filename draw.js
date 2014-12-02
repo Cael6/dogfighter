@@ -200,11 +200,16 @@ function drawRadar(ctx, gaze){
   var height = 100;
   
   //black square
-  ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Set white to the color of letters
-  ctx.fillRect(xPos - width/2, yPos - height/2, width, height);
+  ctx.fillStyle = 'rgba(0, 20, 0, 1)'; // Set white to the color of letters
+  // ctx.fillRect(xPos - width/2, yPos - height/2, width, height);
+
+  ctx.beginPath();
+  ctx.arc(xPos, yPos, width/2, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
   
   //draw compass
-  var dir = new Float32Array([gaze[0], gaze[1], gaze[2]]);
+  var dir = new Float32Array([gaze[0], 0.0, gaze[2]]);
   dir = scaleVec(normalizeVec(dir), 30);
 
   ctx.beginPath();
@@ -213,7 +218,6 @@ function drawRadar(ctx, gaze){
   ctx.closePath();
   ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
   ctx.stroke();
-  
   
 }
 

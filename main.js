@@ -2,6 +2,7 @@ var planeDrawn = false;
 var planeNs = null;
 var planeIs = null;
 var planeCs = null;
+var view_distance = 400;
 
 var move_speed = 0.05;
 
@@ -46,6 +47,10 @@ var buildings = [
   new Float32Array([-100.0, 3.0, -100.0])
   ];
 var build_colours = [SILVER, SILVER, SILVER, SILVER];
+
+var bullets = new Array();
+var bullet_speed = 100;
+var bullet_size = 0.05;
 
 function main() {
   
@@ -148,7 +153,7 @@ function main() {
 
   var tick = function(){
 
-    mvpMatrix.setPerspective(75, 1, 1, 400);
+    mvpMatrix.setPerspective(75, 1, 1, view_distance);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
 
     // Pass the model view projection matrix to u_MvpMatrix
@@ -164,6 +169,7 @@ function main() {
 	
     var now = Date.now();
     var fps = getFPS(now);
+    animateBullets(now);
     last = now;
 
     drawOcean(gl, uniforms, mdlMatrix);
@@ -171,6 +177,7 @@ function main() {
     drawSun(gl, uniforms, mdlMatrix);
     drawBuildings(gl, uniforms, mdlMatrix);
     drawPlane(gl, uniforms, mdlMatrix, false);
+    drawBullets(gl, uniforms, mdlMatrix);
 
     //own plane
     //drawPlane(gl, uniforms, mdlMatrix, true);
@@ -241,8 +248,8 @@ function drawSun(gl, uniforms, mdlMatrix) {
 }
 
 function drawBuildings(gl, uniforms, mdlMatrix){
-	for(var i=0; i<buildings.length; i++){
-		mdlMatrixChild=new Matrix4(mdlMatrix);
+  for(var i=0; i<buildings.length; i++){
+    mdlMatrixChild=new Matrix4(mdlMatrix);
     mdlMatrixChild.translate(buildings[i][0], buildings[i][1], buildings[i][2]);
     mdlMatrixChild.scale(1.0, 5.0, 1.0);
     gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
@@ -252,6 +259,23 @@ function drawBuildings(gl, uniforms, mdlMatrix){
     gl.uniform1f(uniforms['u_isBuilding'], 1.0);
     gl.uniform1f(uniforms['u_isWater'], 0.0);
     cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
+    drawCube(gl, cubeColors, 1);
+  }
+  
+}
+
+function drawBullets(gl, uniforms, mdlMatrix){
+	for(var i=0; i<bullets.length; i++){
+		mdlMatrixChild=new Matrix4(mdlMatrix);
+    mdlMatrixChild.translate(bullets[i].pos[0], bullets[i].pos[1], bullets[i].pos[2]);
+    mdlMatrixChild.scale(bullet_size, bullet_size, bullet_size);
+    gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+    gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+    gl.uniform1f(uniforms['u_isSun'], 0.0);
+    gl.uniform1f(uniforms['u_isPlane'], 0.0);
+    gl.uniform1f(uniforms['u_isBuilding'], 0.0);
+    gl.uniform1f(uniforms['u_isWater'], 0.0);
+    cubeColors=[WHITE, WHITE, WHITE, WHITE, WHITE, WHITE];
     drawCube(gl, cubeColors, 1);
 	}
 	
@@ -365,4 +389,23 @@ function getFPS(now) {
 function resetView() {
   gaze = new Float32Array([0.0, 0.0, 1.0]);
   up_vec = new Float32Array([0.0, 1.0, 0.0]);
+}
+
+function animateBullets(now) {
+  for(var i = 0; i < bullets.length; i++) {
+    for(var j = 0; j < 3; j++ ) {
+      bullets[i].pos[j] += (now - last)/1000 * bullet_speed * bullets[i].dir[j];
+    }
+    //clear bullets out of frustum
+    if(
+      bullets[i].pos[1] < 0.0 //bullet below sea level
+      || Math.abs(vecLength(subVec(bullets[i].pos, eye))) > view_distance //bullet beyond frustrum
+    ) {
+      for(var j = i; j < bullets.length; j++) { //shift elements of array left for all following elements and pop the last element.
+        bullets[j] = bullets[j + 1];
+      }
+      bullets.pop();
+      i--;
+    }
+  }
 }

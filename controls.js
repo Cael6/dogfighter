@@ -2,7 +2,7 @@
 controls.js
 */
 
-var dRot = 4.0;
+var dRot = 2.0;
 var speed_fac = 0.75;
 var accel = 0.5;
 var max_spd_fac = 2.0;
@@ -156,9 +156,10 @@ function getSpeedFac(){
 }
 
 function fire_step(){
-	console.log("POW");
 	if(space_down) {
-		setTimeout(fire_step, 200);
+		fireBullet();
+		console.log(bullets);
+		setTimeout(fire_step, 500);
 	}
 }
 

@@ -12,8 +12,14 @@ function getTransformedFloat32Array(matrix, array) {
 function normalizeVec(vector) {
   var new_vec = new Float32Array(3);
   var length = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
-  for(var i = 0; i < 3; i++) {
-    new_vec[i] = vector[i]/length;
+  if(length !== 0){
+    for(var i = 0; i < 3; i++) {
+      new_vec[i] = vector[i]/length;
+    }
+  } else {
+    for(var i = 0; i < 3; i++) {
+      new_vec[i] = 0.0;
+    }
   }
   return new_vec;
 }
@@ -117,4 +123,12 @@ function getLookAtTrans(pos1, pos2) {
   
   
   return trans;
+}
+
+function fireBullet() {
+  var new_bullet = {
+    pos: new Float32Array([eye[0], eye[1], eye[2]]),
+    dir: new Float32Array([gaze[0], gaze[1], gaze[2]])
+  }
+  bullets[bullets.length] = new_bullet;
 }
