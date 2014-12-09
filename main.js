@@ -204,8 +204,6 @@ function drawGround(gl, uniforms, mdlMatrix){
   mdlMatrixChild.translate(0.0, -3.0, 0.0);
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isPlane'], 0.0);
-  gl.uniform1f(uniforms['u_isBuilding'], 0.0);
   cubeColors=[null, null, null, null, SAND, null];
   drawCube(gl, cubeColors, -1);
 }
@@ -228,8 +226,6 @@ function drawBuildings(gl, uniforms, mdlMatrix){
     mdlMatrixChild.scale(1.0, 5.0, 1.0);
     gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
     gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-    gl.uniform1f(uniforms['u_isPlane'], 0.0);
-    gl.uniform1f(uniforms['u_isBuilding'], 1.0);
     cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
     drawCube(gl, cubeColors, 1);
   }
@@ -243,8 +239,6 @@ function drawBullets(gl, uniforms, mdlMatrix){
     mdlMatrixChild.scale(bullet_size, bullet_size, bullet_size);
     gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
     gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-    gl.uniform1f(uniforms['u_isPlane'], 0.0);
-    gl.uniform1f(uniforms['u_isBuilding'], 0.0);
     cubeColors=[WHITE, WHITE, WHITE, WHITE, WHITE, WHITE];
     drawCube(gl, cubeColors, 1);
 	}
@@ -260,8 +254,6 @@ function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isPlane'], 1.0);
-  gl.uniform1f(uniforms['u_isBuilding'], 0.0);
   drawPlaneObj(gl, [RED, BLUE, YELLOW, BLACK, WHITE, SILVER], 1);
 }
 
@@ -411,19 +403,6 @@ function setUpDefaultShader(gl) {
   }
   uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
 
-  var u_isPlane = gl.getUniformLocation(gl.program, 'u_isPlane');
-  if(!u_isPlane) {
-    console.log('Failed to get the storage location of u_isPlane');
-    return;
-  }
-  uniforms['u_isPlane'] = u_isPlane;
-
-  var u_isBuilding = gl.getUniformLocation(gl.program, 'u_isBuilding');
-  if(!u_isBuilding) {
-    console.log('Failed to get the storage location of u_isBuilding');
-    return;
-  }
-  uniforms['u_isBuilding'] = u_isBuilding;
   return uniforms;
 }
 
