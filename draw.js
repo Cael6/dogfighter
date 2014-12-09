@@ -9,7 +9,7 @@ function draw2d(ctx, text) {
   ctx.fillText(text, 7, 393); 
 }
 
-function drawCube(gl, cubeColors, normalDirection) {
+function initCube(element){
   // Create a cube
   //    v6----- v5
   //   /|      /|
@@ -35,54 +35,55 @@ function drawCube(gl, cubeColors, normalDirection) {
     0.0, -1.0, 0.0,0.0,   0.0, -1.0,0.0,0.0,  0.0, -1.0,0.0,0.0,  0.0, -1.0, 0.0,0.0,  // v7-v4-v3-v2 down
      0.0, 0.0, -1.0,0.0,  0.0, 0.0, -1.0,0.0,  0.0,0.0, -1.0,0.0,   0.0,0.0, -1.0, 0.0  // v4-v7-v6-v5 back
   ]);
-
-  /*var colors = new Float32Array([     // Colors
-    0.4, 0.4, 1.0,  0.4, 0.4, 1.0,  0.4, 0.4, 1.0,  0.4, 0.4, 1.0,  // v0-v1-v2-v3 front(blue)
-    0.4, 1.0, 0.4,  0.4, 1.0, 0.4,  0.4, 1.0, 0.4,  0.4, 1.0, 0.4,  // v0-v3-v4-v5 right(green)
-    1.0, 0.4, 0.4,  1.0, 0.4, 0.4,  1.0, 0.4, 0.4,  1.0, 0.4, 0.4,  // v0-v5-v6-v1 up(red)
-    1.0, 1.0, 0.4,  1.0, 1.0, 0.4,  1.0, 1.0, 0.4,  1.0, 1.0, 0.4,  // v1-v6-v7-v2 left
-    1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  // v7-v4-v3-v2 down
-    0.4, 1.0, 1.0,  0.4, 1.0, 1.0,  0.4, 1.0, 1.0,  0.4, 1.0, 1.0   // v4-v7-v6-v5 back
-  ]);*/
   
   var BLACK=new Float32Array([0.0, 0.0, 0.0]);
   
   var indicesTemp = [];
   var colors = new Float32Array(6*4*3);
   for(i=0; i<6; i++){
-  
-	var faceColor=cubeColors[i];
-  
-	if(null!=faceColor){
-		indicesTemp.push(i*4);
-		indicesTemp.push(i*4+1);
-		indicesTemp.push(i*4+2);
-		
-		indicesTemp.push(i*4);
-		indicesTemp.push(i*4+2);
-		indicesTemp.push(i*4+3);
-	} else {
-		faceColor=BLACK;
-	}
-		
-			
-	for(j=0; j<4; j++){
-		for(k=0; k<3; k++){
-			colors[k+3*j+4*3*i]=faceColor[k];
-		}		
-	}
+    
+    var faceColor= element.build_colors[i];
+    
+    if(null!=faceColor){
+      indicesTemp.push(i*4);
+      indicesTemp.push(i*4+1);
+      indicesTemp.push(i*4+2);
+      
+      indicesTemp.push(i*4);
+      indicesTemp.push(i*4+2);
+      indicesTemp.push(i*4+3);
+    } else {
+      faceColor=BLACK;
+    }
+      
+        
+    for(j=0; j<4; j++){
+      for(k=0; k<3; k++){
+        colors[k+3*j+4*3*i]=faceColor[k];
+      }	
+    }
   }
   
   var indices = new Uint8Array(indicesTemp);
+  
+  element.indices = indices;
+  element.normals = normals;
+  element.shader_colors = colors;
+  element.vertices = vertices;
+  initMdlMatrix(element);
+}
 
- /* var indices = new Uint8Array([       // Indices of the vertices
-     0, 1, 2,   0, 2, 3,    // front
-     4, 5, 6,   4, 6, 7,    // right
-     8, 9,10,   8,10,11,    // up
-    12,13,14,  12,14,15,    // left
-    16,17,18,  16,18,19,    // down
-    20,21,22,  20,22,23     // back
-  ]);*/
+function initMdlMatrix(element){
+  var mdlMatrixChild = new Matrix4();
+  if(element.is_static){
+    mdlMatrixChild.translate(element.pos[0], element.pos[1], element.pos[2]);
+    mdlMatrixChild.scale(element.scale[0], element.scale[1], element.scale[2]);
+    element.mdl_matrix = mdlMatrixChild;
+    element.nmdl_matrix = getInverseTranspose(mdlMatrixChild);
+  }
+}
+
+function drawCube(gl, element) {
 
   // Create a buffer object
   var indexBuffer = gl.createBuffer();
@@ -90,18 +91,18 @@ function drawCube(gl, cubeColors, normalDirection) {
     return -1;
 
   // Write the vertex coordinates and color to the buffer object
-  if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, 'a_Position'))
+  if (!initArrayBuffer(gl, element.vertices, 3, gl.FLOAT, 'a_Position'))
     return -1;
 
-  if (!initArrayBuffer(gl, colors, 3, gl.FLOAT, 'a_Color'))
+  if (!initArrayBuffer(gl, element.shader_colors, 3, gl.FLOAT, 'a_Color'))
     return -1;
 	
-  if (!initArrayBuffer(gl, normals, 4, gl.FLOAT, 'a_Normal'))
+  if (!initArrayBuffer(gl, element.normals, 4, gl.FLOAT, 'a_Normal'))
     return -1;
 
   // Write the indices to the buffer object
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, element.indices, gl.STATIC_DRAW);
   
   // Get the storage location of u_NormalDirection
   var u_NormalDirection = gl.getUniformLocation(gl.program, 'u_NormalDirection');
@@ -110,14 +111,10 @@ function drawCube(gl, cubeColors, normalDirection) {
     return;
   }
   
-  gl.uniform1f(u_NormalDirection, normalDirection);
+  gl.uniform1f(u_NormalDirection, element.normal_dir);
 
    // Draw the cube
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
-}
-
-function drawSphere(gl, sphereColor, normalDirection) {
-
+  gl.drawElements(gl.TRIANGLES, element.indices.length, gl.UNSIGNED_BYTE, 0);
 }
 
 function drawPlaneObj(gl, planeColors, normalDirection) {

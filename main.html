@@ -100,7 +100,7 @@
         float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
         float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
         float water_alpha = 1.0; //noise or transparency goes here
-        vec4 this_Color = v_Color*vec4(1.0, 1.0, 1.0, water_alpha);
+        vec4 this_Color = v_Color*vec4(1.0 * water_alpha, 1.0 * water_alpha, 1.0 * water_alpha, water_alpha);
         vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
         gl_FragColor = this_Color*lighting;
       }

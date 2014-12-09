@@ -39,14 +39,102 @@ var pl_pos = new Float32Array([0.0, 6.0, 10.0]);
 var pl_dir = new Float32Array([1.0, 0.0, 0.0]);
 var pl_up = new Float32Array([0.0, 1.0, 0.0]);
 
-var sun = [0.0, 20.0, 250.0];
 var buildings = [
-  new Float32Array([100.0, 3.0, 100.0]), 
-  new Float32Array([-100.0, 3.0, 100.0]),
-  new Float32Array([100.0, 3.0, -100.0]),
-  new Float32Array([-100.0, 3.0, -100.0])
-  ];
-var build_colours = [SILVER, SILVER, SILVER, SILVER];
+  {
+    'pos' : new Float32Array([100.0, 3.0, 100.0]),
+    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
+    'shader_colors' : null,
+    'vertices' : null,
+    'normals' : null,
+    'indices' : null,
+    'is_static' : true,
+    'mdl_matrix' : null,
+    'nmdl_matrix' : null,
+    'normal_dir' : 1
+  },
+  {
+    'pos' : new Float32Array([-100.0, 3.0, 100.0]),
+    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
+    'shader_colors' : null,
+    'vertices' : null,
+    'normals' : null,
+    'indices' : null,
+    'is_static' : true,
+    'mdl_matrix' : null,
+    'nmdl_matrix' : null,
+    'normal_dir' : 1
+  },
+  {
+    'pos' : new Float32Array([100.0, 3.0, -100.0]),
+    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
+    'shader_colors' : null,
+    'vertices' : null,
+    'normals' : null,
+    'indices' : null,
+    'is_static' : true,
+    'mdl_matrix' : null,
+    'nmdl_matrix' : null,
+    'normal_dir' : 1
+  },
+  {
+    'pos' : new Float32Array([-100.0, 3.0, -100.0]),
+    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
+    'shader_colors' : null,
+    'vertices' : null,
+    'normals' : null,
+    'indices' : null,
+    'is_static' : true,
+    'mdl_matrix' : null,
+    'nmdl_matrix' : null,
+    'normal_dir' : 1
+  }
+];
+
+var bullet = {
+  'pos' : null,
+  'scale' : new Float32Array([0.1, 0.1, 0.1]),
+  'build_colors' : [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],
+  'shader_colors' : null,
+  'vertices' : null,
+  'normals' : null,
+  'indices' : null,
+  'is_static' : false,
+  'mdl_matrix' : null,
+  'nmdl_matrix' : null,
+  'normal_dir' : 1
+};
+
+var sun = {
+  'pos' : new Float32Array([0.0, 20.0, 250.0]),
+  'scale' : new Float32Array([20.0, 20.0, 20.0]),
+  'build_colors' : [null, null, null, null, null, SUN_YELLOW],
+  'shader_colors' : null,
+  'vertices' : null,
+  'normals' : null,
+  'indices' : null,
+  'is_static' : false,
+  'mdl_matrix' : null,
+  'nmdl_matrix' : null,
+  'normal_dir' : -1
+};
+
+var ocean = {
+  'pos' : new Float32Array([0.0, 0.0, 0.0]),
+  'scale' : new Float32Array([1000.0, 0.1, 1000.0]),
+  'build_colors' : [null, null, null, null, OCEAN_BLUE, null],
+  'shader_colors' : null,
+  'vertices' : null,
+  'normals' : null,
+  'indices' : null,
+  'is_static' : true,
+  'mdl_matrix' : null,
+  'nmdl_matrix' : null,
+  'normal_dir' : 1
+};
 
 var bullets = new Array();
 var bullet_speed = 100;
@@ -97,9 +185,9 @@ function main() {
 
   gl.clearColor(SKY_BLUE[0], SKY_BLUE[1], SKY_BLUE[2], 1.0);
   gl.enable(gl.DEPTH_TEST);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  
   gl.enable(gl.BLEND);
-
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   var uniforms = {
     'sun': setUpSunShader(gl),
@@ -112,15 +200,24 @@ function main() {
 
   initEventHandlers();
 
-  //constantSpeed();
-
+  for(var l=0; l<buildings.length; l++){
+    initCube(buildings[l]);
+    buildings[l].uniforms = uniforms.default;
+  }
+  initCube(sun);
+  sun.uniforms = uniforms.sun;
+  initCube(bullet);
+  bullet.uniforms = uniforms.default;
+  initCube(ocean);
+  ocean.uniforms = uniforms.ocean;
+  
   var tick = function(){
 
 
     mvpMatrix.setPerspective(75, 1, 1, view_distance);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
 
-    sun[2] = eye[2] + view_distance;
+    sun.pos[2] = eye[2] + view_distance;
 
     switchShaders(gl, "default");
     // Pass the model view projection matrix to u_MvpMatrix
@@ -153,24 +250,26 @@ function main() {
     setupLightDefault(gl, eye);
 
     switchShaders(gl, "ocean");
-    drawOcean(gl, uniforms.ocean, mdlMatrix);
+    drawCubeObj(gl, ocean);
     switchShaders(gl, "sun");
-    drawSun(gl, uniforms.sun, mdlMatrix);
+    drawCubeObj(gl, sun);
+    
     switchShaders(gl, "default");
-    drawGround(gl, uniforms.default, mdlMatrix);
-    drawBuildings(gl, uniforms.default, mdlMatrix);
+    for(var n=0; n<bullets.length; n++){
+      drawCubeObj(gl, bullets[n]);
+    }
+    for(var b=0; b<buildings.length; b++){
+      drawCubeObj(gl, buildings[b]);
+    }
+    
     drawPlane(gl, uniforms.default, mdlMatrix, false);
-    drawBullets(gl, uniforms.default, mdlMatrix);
-
-    //own plane
-    //drawPlane(gl, uniforms, mdlMatrix, true);
 
     //draw 2d stuff
     var spd = getSpeedFac();
     drawSpeed(ctx, spd);
     drawRadar(ctx, gaze);
     drawHUD(ctx, pl_pos);
-    //draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
+    draw2d(ctx, "Frame Rate: " + fps.toFixed(2));
 
     oppMoveTow(eye);
     requestAnimationFrame(tick, canvas);
@@ -187,64 +286,6 @@ function getInverseTranspose(mat4){
 	return m;
 }
 
-function drawOcean(gl, uniforms, mdlMatrix){
-  //ocean
-  mdlMatrixChild=new Matrix4(mdlMatrix);
-  mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
-  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[null, null, null, null, OCEAN_BLUE, null];
-  drawCube(gl, cubeColors, -1);
-}
-
-function drawGround(gl, uniforms, mdlMatrix){
-  //ground
-  mdlMatrixChild=new Matrix4(mdlMatrix);
-  mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
-  mdlMatrixChild.translate(0.0, -3.0, 0.0);
-  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[null, null, null, null, SAND, null];
-  drawCube(gl, cubeColors, -1);
-}
-
-function drawSun(gl, uniforms, mdlMatrix) {
-  mdlMatrixChild=new Matrix4(mdlMatrix);
-  mdlMatrixChild.translate(sun[0], sun[1], sun[2]);
-  mdlMatrixChild.rotate(sun_angle, 1, 1, 1);
-  mdlMatrixChild.scale(sun_size, sun_size, sun_size);
-  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
-  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  cubeColors=[null, null, null, null, null, SUN_YELLOW];
-  drawCube(gl, cubeColors, -1);
-}
-
-function drawBuildings(gl, uniforms, mdlMatrix){
-  for(var i=0; i<buildings.length; i++){
-    mdlMatrixChild=new Matrix4(mdlMatrix);
-    mdlMatrixChild.translate(buildings[i][0], buildings[i][1], buildings[i][2]);
-    mdlMatrixChild.scale(1.0, 5.0, 1.0);
-    gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
-    gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-    cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
-    drawCube(gl, cubeColors, 1);
-  }
-  
-}
-
-function drawBullets(gl, uniforms, mdlMatrix){
-	for(var i=0; i<bullets.length; i++){
-		mdlMatrixChild=new Matrix4(mdlMatrix);
-    mdlMatrixChild.translate(bullets[i].pos[0], bullets[i].pos[1], bullets[i].pos[2]);
-    mdlMatrixChild.scale(bullet_size, bullet_size, bullet_size);
-    gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
-    gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-    cubeColors=[WHITE, WHITE, WHITE, WHITE, WHITE, WHITE];
-    drawCube(gl, cubeColors, 1);
-	}
-	
-}
-
 function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   mdlMatrixChild=new Matrix4(mdlMatrix);
   mdlMatrixChild.translate(pl_pos[0], pl_pos[1], pl_pos[2]);
@@ -255,6 +296,19 @@ function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
   drawPlaneObj(gl, [RED, BLUE, YELLOW, BLACK, WHITE, SILVER], 1);
+}
+
+function drawCubeObj(gl, element){
+  if(!element.is_static){
+    var mdlMatrixChild=new Matrix4();
+    mdlMatrixChild.translate(element.pos[0], element.pos[1], element.pos[2]);
+    mdlMatrixChild.scale(element.scale[0], element.scale[1], element.scale[2]);
+    element.mdl_matrix = mdlMatrixChild;
+    element.nmdl_matrix = getInverseTranspose(mdlMatrixChild);
+  }
+  gl.uniformMatrix4fv(element.uniforms['u_MdlMatrix'], false, element.mdl_matrix.elements);
+  gl.uniformMatrix4fv(element.uniforms['u_NMdlMatrix'], false, element.nmdl_matrix.elements);
+  drawCube(gl, element);
 }
 
 function initArrayBuffer(gl, data, num, type, attribute) {
@@ -467,3 +521,63 @@ function setUpOceanShader(gl) {
   uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
   return uniforms;
 }
+
+/**
+function drawOcean(gl, uniforms, mdlMatrix){
+  //ocean
+  mdlMatrixChild=new Matrix4(mdlMatrix);
+  mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
+  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+  cubeColors=[null, null, null, null, OCEAN_BLUE, null];
+  drawCube(gl, cubeColors, -1);
+}
+
+function drawGround(gl, uniforms, mdlMatrix){
+  //ground
+  mdlMatrixChild=new Matrix4(mdlMatrix);
+  mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
+  mdlMatrixChild.translate(0.0, -3.0, 0.0);
+  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+  cubeColors=[null, null, null, null, SAND, null];
+  drawCube(gl, cubeColors, -1);
+}
+
+function drawSun(gl, uniforms, mdlMatrix) {
+  mdlMatrixChild=new Matrix4(mdlMatrix);
+  mdlMatrixChild.translate(sun.pos[0], sun.pos[1], sun.pos[2]);
+  mdlMatrixChild.rotate(sun_angle, 1, 1, 1);
+  mdlMatrixChild.scale(sun_size, sun_size, sun_size);
+  gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+  gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+  cubeColors=[null, null, null, null, null, SUN_YELLOW];
+  drawCube(gl, cubeColors, -1);
+}
+
+function drawBuildings(gl, uniforms, mdlMatrix){
+  for(var i=0; i<buildings.length; i++){
+    mdlMatrixChild=new Matrix4(mdlMatrix);
+    mdlMatrixChild.translate(buildings[i][0], buildings[i][1], buildings[i][2]);
+    mdlMatrixChild.scale(1.0, 5.0, 1.0);
+    gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+    gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+    cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
+    drawCube(gl, cubeColors, 1);
+  }
+  
+}
+
+function drawBullets(gl, uniforms, mdlMatrix){
+	for(var i=0; i<bullets.length; i++){
+		mdlMatrixChild=new Matrix4(mdlMatrix);
+    mdlMatrixChild.translate(bullets[i].pos[0], bullets[i].pos[1], bullets[i].pos[2]);
+    mdlMatrixChild.scale(bullet_size, bullet_size, bullet_size);
+    gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
+    gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
+    cubeColors=[WHITE, WHITE, WHITE, WHITE, WHITE, WHITE];
+    drawCube(gl, cubeColors, 1);
+	}
+	
+}
+**/
