@@ -76,7 +76,19 @@ function main() {
   }
 
   // Initialize shaders
-  if (!initShaders(gl, 'shader-vs', 'shader-fs')) {
+  if (!initShaders(gl, 'default')) {
+    console.log('Failed to intialize shaders.');
+    return;
+  }
+
+  // Initialize shaders
+  if (!initShaders(gl, 'sun')) {
+    console.log('Failed to intialize shaders.');
+    return;
+  }
+
+  // Initialize shaders
+  if (!initShaders(gl, 'ocean')) {
     console.log('Failed to intialize shaders.');
     return;
   }
@@ -89,60 +101,11 @@ function main() {
   gl.enable(gl.BLEND);
 
 
-  var uniforms = new Array();
-
-  // Get the storage location of u_MvpMatrix
-  var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
-  if (!u_MvpMatrix) {
-    console.log('Failed to get the storage location of u_MvpMatrix');
-    return;
+  var uniforms = {
+    'default': setUpDefaultShader(gl),
+    'sun': setUpSunShader(gl),
+    'ocean': setUpOceanShader(gl)
   }
-  uniforms['u_MvpMatrix'] = u_MvpMatrix;
-  
-    // Get the storage location of u_MdlMatrix
-  var u_MdlMatrix = gl.getUniformLocation(gl.program, 'u_MdlMatrix');
-  if (!u_MdlMatrix) {
-    console.log('Failed to get the storage location of u_MdlMatrix');
-    return;
-  }
-  uniforms['u_MdlMatrix'] = u_MdlMatrix;
-  
-    // Get the storage location of u_NMdlMatrix
-  var u_NMdlMatrix = gl.getUniformLocation(gl.program, 'u_NMdlMatrix');
-  if (!u_NMdlMatrix) {
-    console.log('Failed to get the storage location of u_NMdlMatrix');
-    return;
-  }
-  uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
-
-
-  var u_isSun = gl.getUniformLocation(gl.program, 'u_isSun');
-  if(!u_isSun) {
-    console.log('Failed to get the storage location of u_isSun');
-    return;
-  }
-  uniforms['u_isSun'] = u_isSun;
-
-  var u_isPlane = gl.getUniformLocation(gl.program, 'u_isPlane');
-  if(!u_isPlane) {
-    console.log('Failed to get the storage location of u_isPlane');
-    return;
-  }
-  uniforms['u_isPlane'] = u_isPlane;
-
-  var u_isBuilding = gl.getUniformLocation(gl.program, 'u_isBuilding');
-  if(!u_isBuilding) {
-    console.log('Failed to get the storage location of u_isBuilding');
-    return;
-  }
-  uniforms['u_isBuilding'] = u_isBuilding;
-
-  var u_isWater = gl.getUniformLocation(gl.program, 'u_isWater');
-  if(!u_isWater) {
-    console.log('Failed to get the storage location of u_isWater');
-    return;
-  }
-  uniforms['u_isWater'] = u_isWater;
 
   // Set the eye point and the viewing volume
   var mvpMatrix = new Matrix4();
@@ -153,19 +116,19 @@ function main() {
 
   var tick = function(){
 
+    switchShaders(gl, "default");
+
     mvpMatrix.setPerspective(75, 1, 1, view_distance);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
 
     // Pass the model view projection matrix to u_MvpMatrix
-    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    gl.uniformMatrix4fv(uniforms.default['u_MvpMatrix'], false, mvpMatrix.elements);
 
     // Clear color and depth buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var mdlMatrix = new Matrix4();
     mdlMatrix.setIdentity();
-
-    setupLight(gl, eye);
 	
     var now = Date.now();
     var fps = getFPS(now);
@@ -173,12 +136,18 @@ function main() {
     animateSelf(now);
     last = now;
 
-    drawOcean(gl, uniforms, mdlMatrix);
-    drawGround(gl, uniforms, mdlMatrix);
-    drawSun(gl, uniforms, mdlMatrix);
-    drawBuildings(gl, uniforms, mdlMatrix);
-    drawPlane(gl, uniforms, mdlMatrix, false);
-    drawBullets(gl, uniforms, mdlMatrix);
+    switchShaders(gl, 'default');
+    setupLightDefault(gl, eye);
+
+    switchShaders(gl, "ocean");
+    drawOcean(gl, uniforms.ocean, mdlMatrix);
+    switchShaders(gl, "sun");
+    drawSun(gl, uniforms.sun, mdlMatrix);
+    switchShaders(gl, "default");
+    drawGround(gl, uniforms.default, mdlMatrix);
+    drawBuildings(gl, uniforms.default, mdlMatrix);
+    drawPlane(gl, uniforms.default, mdlMatrix, false);
+    drawBullets(gl, uniforms.default, mdlMatrix);
 
     //own plane
     //drawPlane(gl, uniforms, mdlMatrix, true);
@@ -226,10 +195,8 @@ function drawGround(gl, uniforms, mdlMatrix){
   mdlMatrixChild.translate(0.0, -3.0, 0.0);
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isSun'], 0.0);
   gl.uniform1f(uniforms['u_isPlane'], 0.0);
   gl.uniform1f(uniforms['u_isBuilding'], 0.0);
-  gl.uniform1f(uniforms['u_isWater'], 0.0);
   cubeColors=[null, null, null, null, SAND, null];
   drawCube(gl, cubeColors, -1);
 }
@@ -241,10 +208,8 @@ function drawSun(gl, uniforms, mdlMatrix) {
   mdlMatrixChild.scale(sun_size, sun_size, sun_size);
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isSun'], 1.0);
   gl.uniform1f(uniforms['u_isPlane'], 0.0);
   gl.uniform1f(uniforms['u_isBuilding'], 0.0);
-  gl.uniform1f(uniforms['u_isWater'], 0.0);
   cubeColors=[null, null, null, null, null, SUN_YELLOW];
   drawCube(gl, cubeColors, -1);
 }
@@ -256,10 +221,8 @@ function drawBuildings(gl, uniforms, mdlMatrix){
     mdlMatrixChild.scale(1.0, 5.0, 1.0);
     gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
     gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-    gl.uniform1f(uniforms['u_isSun'], 0.0);
     gl.uniform1f(uniforms['u_isPlane'], 0.0);
     gl.uniform1f(uniforms['u_isBuilding'], 1.0);
-    gl.uniform1f(uniforms['u_isWater'], 0.0);
     cubeColors=[build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i], build_colours[i]];
     drawCube(gl, cubeColors, 1);
   }
@@ -273,10 +236,8 @@ function drawBullets(gl, uniforms, mdlMatrix){
     mdlMatrixChild.scale(bullet_size, bullet_size, bullet_size);
     gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
     gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-    gl.uniform1f(uniforms['u_isSun'], 0.0);
     gl.uniform1f(uniforms['u_isPlane'], 0.0);
     gl.uniform1f(uniforms['u_isBuilding'], 0.0);
-    gl.uniform1f(uniforms['u_isWater'], 0.0);
     cubeColors=[WHITE, WHITE, WHITE, WHITE, WHITE, WHITE];
     drawCube(gl, cubeColors, 1);
 	}
@@ -292,10 +253,8 @@ function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isSun'], 0.0);
   gl.uniform1f(uniforms['u_isPlane'], 1.0);
   gl.uniform1f(uniforms['u_isBuilding'], 0.0);
-  gl.uniform1f(uniforms['u_isWater'], 0.0);
   drawPlaneObj(gl, [RED, BLUE, YELLOW, BLACK, WHITE, SILVER], 1);
 }
 
@@ -321,8 +280,7 @@ function initArrayBuffer(gl, data, num, type, attribute) {
   return true;
 }
 
-function setupLight(gl, eye, u_MdlMatrix, mdlMatrix, u_NMdlMatrix){
-	  
+function setupLightDefault(gl, eye){
 	// Get the storage location of u_Ambient
 	var u_Ambient = gl.getUniformLocation(gl.program, 'u_Ambient');
 	if (!u_Ambient) {
@@ -415,4 +373,111 @@ function animateBullets(now) {
 function animateSelf(now) {
   gaze = normalizeVec(gaze);
   eye = addVec(eye, scaleVec(gaze, getSpeedFac() * (now - last) / 1000));
+}
+
+function setUpDefaultShader(gl) {
+  var uniforms = new Array();
+
+  switchShaders(gl, "default");
+
+  // Get the storage location of u_MvpMatrix
+  var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
+  if (!u_MvpMatrix) {
+    console.log('Failed to get the storage location of u_MvpMatrix');
+    return;
+  }
+  uniforms['u_MvpMatrix'] = u_MvpMatrix;
+  
+    // Get the storage location of u_MdlMatrix
+  var u_MdlMatrix = gl.getUniformLocation(gl.program, 'u_MdlMatrix');
+  if (!u_MdlMatrix) {
+    console.log('Failed to get the storage location of u_MdlMatrix');
+    return;
+  }
+  uniforms['u_MdlMatrix'] = u_MdlMatrix;
+  
+    // Get the storage location of u_NMdlMatrix
+  var u_NMdlMatrix = gl.getUniformLocation(gl.program, 'u_NMdlMatrix');
+  if (!u_NMdlMatrix) {
+    console.log('Failed to get the storage location of u_NMdlMatrix');
+    return;
+  }
+  uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
+
+  var u_isPlane = gl.getUniformLocation(gl.program, 'u_isPlane');
+  if(!u_isPlane) {
+    console.log('Failed to get the storage location of u_isPlane');
+    return;
+  }
+  uniforms['u_isPlane'] = u_isPlane;
+
+  var u_isBuilding = gl.getUniformLocation(gl.program, 'u_isBuilding');
+  if(!u_isBuilding) {
+    console.log('Failed to get the storage location of u_isBuilding');
+    return;
+  }
+  uniforms['u_isBuilding'] = u_isBuilding;
+  return uniforms;
+}
+
+function setUpSunShader(gl) {
+  var uniforms = new Array();
+
+  switchShaders(gl, "sun");
+
+  // Get the storage location of u_MvpMatrix
+  var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
+  if (!u_MvpMatrix) {
+    console.log('Failed to get the storage location of u_MvpMatrix');
+    return;
+  }
+  uniforms['u_MvpMatrix'] = u_MvpMatrix;
+  
+    // Get the storage location of u_MdlMatrix
+  var u_MdlMatrix = gl.getUniformLocation(gl.program, 'u_MdlMatrix');
+  if (!u_MdlMatrix) {
+    console.log('Failed to get the storage location of u_MdlMatrix');
+    return;
+  }
+  uniforms['u_MdlMatrix'] = u_MdlMatrix;
+  
+    // Get the storage location of u_NMdlMatrix
+  var u_NMdlMatrix = gl.getUniformLocation(gl.program, 'u_NMdlMatrix');
+  if (!u_NMdlMatrix) {
+    console.log('Failed to get the storage location of u_NMdlMatrix');
+    return;
+  }
+  uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
+  return uniforms;
+}
+
+function setUpOceanShader(gl) {
+  var uniforms = new Array();
+
+  switchShaders(gl, "ocean");
+
+  // Get the storage location of u_MvpMatrix
+  var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
+  if (!u_MvpMatrix) {
+    console.log('Failed to get the storage location of u_MvpMatrix');
+    return;
+  }
+  uniforms['u_MvpMatrix'] = u_MvpMatrix;
+  
+    // Get the storage location of u_MdlMatrix
+  var u_MdlMatrix = gl.getUniformLocation(gl.program, 'u_MdlMatrix');
+  if (!u_MdlMatrix) {
+    console.log('Failed to get the storage location of u_MdlMatrix');
+    return;
+  }
+  uniforms['u_MdlMatrix'] = u_MdlMatrix;
+  
+    // Get the storage location of u_NMdlMatrix
+  var u_NMdlMatrix = gl.getUniformLocation(gl.program, 'u_NMdlMatrix');
+  if (!u_NMdlMatrix) {
+    console.log('Failed to get the storage location of u_NMdlMatrix');
+    return;
+  }
+  uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
+  return uniforms;
 }
