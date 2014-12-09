@@ -121,14 +121,26 @@ function getLookAtTrans(pos1, pos2) {
   trans.elements[14] = 0.0;
   trans.elements[15] = 1.0;
   
-  
   return trans;
 }
 
 function fireBullet() {
   gaze = normalizeVec(gaze);
-  var new_bullet = bullet;
+  var new_bullet = clone(bullet);
   new_bullet.pos = new Float32Array([eye[0], eye[1], eye[2]]);
   new_bullet.dir = new Float32Array([gaze[0], gaze[1], gaze[2]]);
   bullets[bullets.length] = new_bullet;
+}
+
+function clone(obj) {
+  if (null == obj || "object" != typeof obj) {
+    return obj;
+  }
+  var copy = obj.constructor();
+  for (var attr in obj) {
+      if (obj.hasOwnProperty(attr)) {
+        copy[attr] = obj[attr];
+      }
+  }
+  return copy;
 }
