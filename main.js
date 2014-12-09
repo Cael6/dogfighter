@@ -76,12 +76,6 @@ function main() {
   }
 
   // Initialize shaders
-  if (!initShaders(gl, 'default')) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-
-  // Initialize shaders
   if (!initShaders(gl, 'sun')) {
     console.log('Failed to intialize shaders.');
     return;
@@ -89,6 +83,12 @@ function main() {
 
   // Initialize shaders
   if (!initShaders(gl, 'ocean')) {
+    console.log('Failed to intialize shaders.');
+    return;
+  }
+
+  // Initialize shaders
+  if (!initShaders(gl, 'default')) {
     console.log('Failed to intialize shaders.');
     return;
   }
@@ -102,8 +102,8 @@ function main() {
 
 
   var uniforms = {
-    'default': setUpDefaultShader(gl),
     'sun': setUpSunShader(gl),
+    'default': setUpDefaultShader(gl),
     'ocean': setUpOceanShader(gl)
   }
 
@@ -116,13 +116,23 @@ function main() {
 
   var tick = function(){
 
-    switchShaders(gl, "default");
 
     mvpMatrix.setPerspective(75, 1, 1, view_distance);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
 
+    sun[2] = eye[2] + view_distance;
+
+    switchShaders(gl, "default");
     // Pass the model view projection matrix to u_MvpMatrix
     gl.uniformMatrix4fv(uniforms.default['u_MvpMatrix'], false, mvpMatrix.elements);
+
+    switchShaders(gl, "ocean");
+    // Pass the model view projection matrix to u_MvpMatrix
+    gl.uniformMatrix4fv(uniforms.ocean['u_MvpMatrix'], false, mvpMatrix.elements);
+
+    switchShaders(gl, "sun");
+    // Pass the model view projection matrix to u_MvpMatrix
+    gl.uniformMatrix4fv(uniforms.sun['u_MvpMatrix'], false, mvpMatrix.elements);
 
     // Clear color and depth buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -137,6 +147,9 @@ function main() {
     last = now;
 
     switchShaders(gl, 'default');
+    setupLightDefault(gl, eye);
+
+    switchShaders(gl, 'ocean');
     setupLightDefault(gl, eye);
 
     switchShaders(gl, "ocean");
@@ -180,10 +193,6 @@ function drawOcean(gl, uniforms, mdlMatrix){
   mdlMatrixChild.scale(1000.0, 1.0, 1000.0);
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isSun'], 0.0);
-  gl.uniform1f(uniforms['u_isPlane'], 0.0);
-  gl.uniform1f(uniforms['u_isBuilding'], 0.0);
-  gl.uniform1f(uniforms['u_isWater'], 1.0);
   cubeColors=[null, null, null, null, OCEAN_BLUE, null];
   drawCube(gl, cubeColors, -1);
 }
@@ -208,8 +217,6 @@ function drawSun(gl, uniforms, mdlMatrix) {
   mdlMatrixChild.scale(sun_size, sun_size, sun_size);
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  gl.uniform1f(uniforms['u_isPlane'], 0.0);
-  gl.uniform1f(uniforms['u_isBuilding'], 0.0);
   cubeColors=[null, null, null, null, null, SUN_YELLOW];
   drawCube(gl, cubeColors, -1);
 }

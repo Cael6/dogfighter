@@ -111,7 +111,7 @@
         float water_alpha = 1.0; //noise or transparency goes here
         vec4 this_Color = v_Color*vec4(1.0, 1.0, 1.0, water_alpha);
         vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
-        gl_FragColor = v_Color*lighting;
+        gl_FragColor = this_Color*lighting;
       }
     </script>
   </body>
