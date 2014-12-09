@@ -2,13 +2,6 @@
 draw.js
 */
 
-function draw2d(ctx, text) {
-  // Draw white letters
-  ctx.font = '18px "Times New Roman"';
-  ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Set white to the color of letters
-  ctx.fillText(text, 7, 393); 
-}
-
 function initCube(element){
   // Create a cube
   //    v6----- v5
@@ -190,16 +183,20 @@ function drawPlaneObj(gl, planeColors, normalDirection) {
   gl.drawElements(gl.TRIANGLES, planeIs.length, gl.UNSIGNED_BYTE, 0);
 }
 
-function drawRadar(ctx, gaze){
+function drawHUD(ctx, gaze, pl_pos, speed, text){
+  ctx.clearRect(0, 0, 800, 600); // Clear <hud>
+  // Draw fps
+  ctx.font = '18px "Times New Roman"';
+  ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Set white to the color of letters
+  ctx.fillText(text, 7, 393);
+  
+  //draw radar
   var xPos = 730; //position of the center of the radar
   var yPos = 530;
   var width = 100;
   var height = 100;
   
-  //black square
   ctx.fillStyle = 'rgba(0, 20, 0, 1)'; // Set white to the color of letters
-  // ctx.fillRect(xPos - width/2, yPos - height/2, width, height);
-
   ctx.beginPath();
   ctx.arc(xPos, yPos, width/2, 0, Math.PI*2, true);
   ctx.closePath();
@@ -224,9 +221,7 @@ function drawRadar(ctx, gaze){
   ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
   ctx.stroke();
   
-}
-
-function drawHUD(ctx, pl_pos){
+  //draw crosshair
   var crossRad = 30.0;
   var innerRad = 10.0;
   var posX = 400.0;
@@ -258,18 +253,16 @@ function drawHUD(ctx, pl_pos){
   ctx.closePath();
   ctx.stroke();
   
-}
-
-function drawSpeed(ctx, speed){
-  var posX = 20.0; 
-  var posY = 480.0; 
-  var height = 100.0;
-  var width = 40.0;
+  //draw throttle
+  var posXSpd = 20.0; 
+  var posYSpd = 480.0; 
+  var heightSpd = 100.0;
+  var widthSpd = 40.0;
 
   //black square
   ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Set white to the color of letters
-  ctx.fillRect(posX, posY, width, height);
+  ctx.fillRect(posXSpd, posYSpd, widthSpd, heightSpd);
 
   ctx.fillStyle = 'rgba(255, 123, 0, 1)';
-  ctx.fillRect(posX + 2, posY + (height - height * speed/max_spd_fac) + 2, width - 4, height * speed/max_spd_fac - 4);
+  ctx.fillRect(posXSpd + 2, posYSpd + (height - height * speed/max_spd_fac) + 2, widthSpd - 4, heightSpd * speed/max_spd_fac - 4);
 }
