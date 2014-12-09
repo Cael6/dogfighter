@@ -11,8 +11,8 @@ var frame_count = 0;
 var max_frame_count = 128;
 var frame_set;
 
-var RED=new Float32Array([1, 0, 0]);
-var WHITE=new Float32Array([1, 1, 1]);
+var RED=new Float32Array([1.0, 0.0, 0.0]);
+var WHITE=new Float32Array([1.0, 1.0, 1.0]);
 var GRAY=new Float32Array([0.5, 0.5, 0.5]);
 var SILVER=new Float32Array([0.75, 0.75, 0.75]);
 var BLACK=new Float32Array([0.0, 0.0, 0.0]);
@@ -31,9 +31,6 @@ var sun_angle = 0.0;
 var eye = new Float32Array([0.0, 4.0, -10.0]); //initial position
 var gaze = new Float32Array([0.0, 0.0, 1.0]); //initial gaze
 var up_vec = new Float32Array([0.0, 1.0, 0.0]);
-//var eye = new Float32Array([0.0, 130.0, 0.0]); //debug
-//var gaze = new Float32Array([0.0, -1.0, 0.0]); //debug
-//var up_vec = new Float32Array([0.0, 0.0, 1.0]); //debug
 
 var pl_pos = new Float32Array([0.0, 6.0, 10.0]);
 var pl_dir = new Float32Array([1.0, 0.0, 0.0]);
@@ -133,7 +130,7 @@ var ocean = {
   'is_static' : true,
   'mdl_matrix' : null,
   'nmdl_matrix' : null,
-  'normal_dir' : 1
+  'normal_dir' : -1
 };
 
 var bullets = new Array();
@@ -216,6 +213,7 @@ function main() {
 
     mvpMatrix.setPerspective(75, 1, 1, view_distance);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
+    
 
     sun.pos[2] = eye[2] + view_distance;
 
@@ -372,7 +370,7 @@ function setupLightDefault(gl, eye){
 	
 	gl.uniform4f(u_Specular, SUN_YELLOW[0], SUN_YELLOW[1], SUN_YELLOW[2], 1.0);
 	
-	gl.uniform4f(u_LightLocation, sun[0], sun[1], sun[2], 1.0);
+	gl.uniform4f(u_LightLocation, sun.pos[0], sun.pos[1], sun.pos[2], 1.0);
 	
 	gl.uniform4f(u_eye, eye[0], eye[1], eye[2], 1.0);
 }
