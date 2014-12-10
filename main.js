@@ -48,6 +48,8 @@ var pl_pos = new Float32Array([0.0, 6.0, 10.0]);
 var pl_dir = new Float32Array([1.0, 0.0, 0.0]);
 var pl_up = new Float32Array([0.0, 1.0, 0.0]);
 
+var engine = document.getElementById('engine'); 
+
 var buildings = [
   {
     'pos' : new Float32Array([100.0, 3.0, 100.0]),
@@ -273,6 +275,15 @@ function main() {
   bullet.uniforms = uniforms.default;
   initCube(ocean);
   ocean.uniforms = uniforms.ocean;
+
+  engine.addEventListener('ended', function() {
+      this.currentTime = 0;
+      this.play();
+  }, false);
+  engine.play();
+  engine.volume = speed_fac/max_spd_fac;
+
+  enemySpawn();
   
   var tick = function(){
 

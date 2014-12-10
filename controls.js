@@ -173,6 +173,7 @@ function w_step() {
 				speed_fac += accel;
 			}
 		}
+        engine.volume = speed_fac/max_spd_fac;
 		setTimeout(w_step, 50);
 	}
 }
@@ -187,6 +188,7 @@ function s_step() {
 				speed_fac -= accel;
 			}
 		}
+        engine.volume = speed_fac/max_spd_fac;
 		setTimeout(s_step, 50);
 	}
 }
