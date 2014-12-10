@@ -391,7 +391,7 @@ function setupLightDefault(gl, eye){
 
 	gl.uniform4f(u_Diffuse, SUN_YELLOW[0], SUN_YELLOW[1], SUN_YELLOW[2]*2.0, 1.0);
 	
-	gl.uniform4f(u_Specular, SUN_YELLOW[0], SUN_YELLOW[1]*0.7, SUN_YELLOW[2], 1.0);
+	gl.uniform4f(u_Specular, SUN_YELLOW[0], SUN_YELLOW[1]*0.7, SUN_YELLOW[2]*0.3, 1.0);
 	
 	gl.uniform4f(u_LightLocation, sun.pos[0], sun.pos[1], sun.pos[2], 1.0);
 	
