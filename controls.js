@@ -4,6 +4,7 @@ controls.js
 
 var dRot = 2.0;
 var speed_fac = 4.0;
+var init_speed_fac = 4.0;
 var accel = 0.2;
 var max_spd_fac = 10.0;
 var min_spd_fac = 2.0;

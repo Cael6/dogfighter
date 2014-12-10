@@ -62,7 +62,7 @@
       void main() {
         float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
         float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
-        vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 256.0));
+        vec4 lighting = (u_Ambient + 8.0*u_Diffuse*nDotL + 8.0*u_Specular*pow(hDotL, 256.0));
 
         gl_FragColor = v_Color*lighting;
       }
@@ -73,11 +73,13 @@
       #endif GL_ES
       varying vec4 v_Color;
       varying vec4 v_Position;
+      uniform vec4 u_Eye;
+      uniform vec4 u_Size;
 
       void main() {
-        float alpha_factor = max(1.0 - sqrt(pow(v_Position.x/20.0,2.0) + pow((v_Position.y - 20.0)/20.0,2.0)),0.0);
+        float alpha_factor = max(1.0 - sqrt(pow((u_Eye.x - v_Position.x)/u_Size.x,2.0) + pow(((v_Position.y) - 30.0)/u_Size.y,2.0)),0.0);
         if(alpha_factor > 0.0) {
-          gl_FragColor = v_Color*vec4(alpha_factor, alpha_factor, alpha_factor, alpha_factor);
+          gl_FragColor = v_Color*vec4(1.0, min(1.0, (v_Position.y/u_Size.y)+0.3), 1.0, 1.0);
         } else {
           gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         }
@@ -97,11 +99,12 @@
       uniform vec4 u_LightLocation;
 
       void main() {
+        vec4 new_amb = vec4(u_Ambient.x, u_Ambient.y, u_Ambient.z + 0.1, 1.0);
         float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
         float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
         float water_alpha = 1.0; //noise or transparency goes here
         vec4 this_Color = v_Color*vec4(1.0 * water_alpha, 1.0 * water_alpha, 1.0 * water_alpha, water_alpha);
-        vec4 lighting = (u_Ambient + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
+        vec4 lighting = (2.0*new_amb + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
         gl_FragColor = this_Color*lighting;
       }
     </script>

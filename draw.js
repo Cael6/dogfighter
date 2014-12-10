@@ -183,12 +183,15 @@ function drawPlaneObj(gl, planeColors, normalDirection) {
   gl.drawElements(gl.TRIANGLES, planeIs.length, gl.UNSIGNED_BYTE, 0);
 }
 
-function drawHUD(ctx, gaze, pl_pos, speed, text){
+function drawHUD(ctx, gaze, pl_pos, speed, text, deaths, kills){
   ctx.clearRect(0, 0, 800, 600); // Clear <hud>
   // Draw fps
   ctx.font = '18px "Times New Roman"';
   ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Set white to the color of letters
   ctx.fillText(text, 7, 393);
+  
+  ctx.fillText("Kills: " + kills, 7, 410);
+  ctx.fillText("Deaths: " + deaths, 7, 438);
   
   //draw radar
   var xPos = 730; //position of the center of the radar

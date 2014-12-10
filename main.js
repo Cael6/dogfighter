@@ -6,22 +6,28 @@ var view_distance = 400;
 
 var move_speed = 0.05;
 
+var deaths = 0;
+var kills = 0;
+
 var frame_set_dt;
 var frame_count = 0;
 var max_frame_count = 128;
 var frame_set;
+
+var SUN_YELLOW = new Float32Array([1.0, 0.99, 0.29]);
+var SKY_BLUE = new Float32Array([0.1, 0.2, 0.282]);
+var OCEAN_BLUE=new Float32Array([0.1, 0.2, 0.282]);
 
 var RED=new Float32Array([1.0, 0.0, 0.0]);
 var WHITE=new Float32Array([1.0, 1.0, 1.0]);
 var GRAY=new Float32Array([0.5, 0.5, 0.5]);
 var SILVER=new Float32Array([0.75, 0.75, 0.75]);
 var BLACK=new Float32Array([0.0, 0.0, 0.0]);
-var OCEAN_BLUE=new Float32Array([0.11, 0.42, 0.63]);
-var SKY_BLUE=new Float32Array([0.32, 0.62, 0.83]);
+
 var BLUE=new Float32Array([0.0, 0.0, 1.0]);
 var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
 var GREEN=new Float32Array([0.0, 1.0, 0.0]);
-var SUN_YELLOW=new Float32Array([0.9, 0.8, 0.4]);
+
 var PLANE_COLOR=new Float32Array([0.1, 0.1, 0.2]);
 var SAND =new Float32Array([1.0, 1.0, 0.59]);
 
@@ -29,8 +35,11 @@ var SAND =new Float32Array([1.0, 1.0, 0.59]);
 var sun_size = 20.0;
 var sun_angle = 0.0;
 var eye = new Float32Array([0.0, 4.0, -10.0]); //initial position
+var init_eye = new Float32Array(eye);
 var gaze = new Float32Array([0.0, 0.0, 1.0]); //initial gaze
+var init_gaze = new Float32Array(gaze);
 var up_vec = new Float32Array([0.0, 1.0, 0.0]);
+var init_up = new Float32Array(up_vec);
 
 var pl_pos = new Float32Array([0.0, 6.0, 10.0]);
 var pl_dir = new Float32Array([1.0, 0.0, 0.0]);
@@ -106,8 +115,8 @@ var bullet = {
 };
 
 var sun = {
-  'pos' : new Float32Array([0.0, 20.0, 250.0]),
-  'scale' : new Float32Array([20.0, 20.0, 20.0]),
+  'pos' : new Float32Array([eye[0], 30.0, eye[2] + view_distance - 15.0]),
+  'scale' : new Float32Array([40.0, 40.0, 40.0]),
   'build_colors' : [null, null, null, null, null, SUN_YELLOW],
   'shader_colors' : null,
   'vertices' : null,
@@ -134,7 +143,7 @@ var ocean = {
 };
 
 var bullets = new Array();
-var bullet_speed = 100;
+var bullet_speed = 50;
 var bullet_size = 0.1;
 
 function main() {
@@ -214,8 +223,8 @@ function main() {
     mvpMatrix.setPerspective(75, 1, 1, view_distance);
     mvpMatrix.lookAt(eye[0], eye[1], eye[2], eye[0] + gaze[0], eye[1] + gaze[1], eye[2] + gaze[2], up_vec[0], up_vec[1], up_vec[2]);
     
-
-    sun.pos[2] = eye[2] + view_distance;
+    sun.pos[0] = eye[0];
+    sun.pos[2] = eye[2] + Math.sqrt(view_distance*view_distance - eye[1]*eye[1]) - 10.0;
 
     switchShaders(gl, "default");
     // Pass the model view projection matrix to u_MvpMatrix
@@ -250,6 +259,8 @@ function main() {
     switchShaders(gl, "ocean");
     drawCubeObj(gl, ocean);
     switchShaders(gl, "sun");
+    gl.uniform4f(uniforms.sun['u_Eye'], eye[0], eye[1], eye[2], 1.0);
+    gl.uniform4f(uniforms.sun['u_Size'], sun.scale[0], sun.scale[1], sun.scale[2], 1.0);
     drawCubeObj(gl, sun);
     
     switchShaders(gl, "default");
@@ -264,8 +275,16 @@ function main() {
 
     //draw 2d stuff
     var spd = getSpeedFac();
-    drawHUD(ctx, gaze, pl_pos, spd, "Frame Rate: " + fps.toFixed(2));
+    drawHUD(ctx, gaze, pl_pos, spd, "Frame Rate: " + fps.toFixed(2), deaths, kills);
 
+    if(eye[1] <= 0.2 || Math.abs(eye[0]) >= 100 || Math.abs(eye[2]) >= 100 || Math.abs(eye[1]) >= 200){
+      eye = init_eye;
+      gaze = init_gaze;
+      up_vec = init_up;
+      speed_fac = init_speed_fac;
+      deaths++;
+    }
+    
     oppMoveTow(eye);
     requestAnimationFrame(tick, canvas);
   }
@@ -366,9 +385,9 @@ function setupLightDefault(gl, eye){
 	
 	gl.uniform4f(u_Ambient, 0.25, 0.25, 0.25, 1.0);
 
-	gl.uniform4f(u_Diffuse, SUN_YELLOW[0], SUN_YELLOW[1], SUN_YELLOW[2], 1.0);
+	gl.uniform4f(u_Diffuse, SUN_YELLOW[0], SUN_YELLOW[1], SUN_YELLOW[2]*2.0, 1.0);
 	
-	gl.uniform4f(u_Specular, SUN_YELLOW[0], SUN_YELLOW[1], SUN_YELLOW[2], 1.0);
+	gl.uniform4f(u_Specular, SUN_YELLOW[0], SUN_YELLOW[1]*0.7, SUN_YELLOW[2], 1.0);
 	
 	gl.uniform4f(u_LightLocation, sun.pos[0], sun.pos[1], sun.pos[2], 1.0);
 	
@@ -483,6 +502,22 @@ function setUpSunShader(gl) {
     return;
   }
   uniforms['u_NMdlMatrix'] = u_NMdlMatrix;
+  
+    // Get the storage location of u_Eye
+  var u_Eye = gl.getUniformLocation(gl.program, 'u_Eye');
+  if (!u_Eye) {
+    console.log('Failed to get the storage location of u_Eye');
+    return;
+  }
+  uniforms['u_Eye'] = u_Eye;
+  
+   // Get the storage location of u_Size
+  var u_Size = gl.getUniformLocation(gl.program, 'u_Size');
+  if (!u_Size) {
+    console.log('Failed to get the storage location of u_Size');
+    return;
+  }
+  uniforms['u_Size'] = u_Size;
   return uniforms;
 }
 
