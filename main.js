@@ -14,6 +14,8 @@ var frame_count = 0;
 var max_frame_count = 128;
 var frame_set;
 
+var game_time = 0;
+
 var SUN_YELLOW = new Float32Array([1.0, 0.99, 0.29]);
 var SKY_BLUE = new Float32Array([0.1, 0.2, 0.282]);
 var OCEAN_BLUE=new Float32Array([0.1, 0.2, 0.282]);
@@ -248,6 +250,7 @@ function main() {
     var fps = getFPS(now);
     animateBullets(now);
     animateSelf(now);
+    game_time += (now - last)/5000;
     last = now;
 
     switchShaders(gl, 'default');
@@ -257,6 +260,7 @@ function main() {
     setupLightDefault(gl, eye);
 
     switchShaders(gl, "ocean");
+    gl.uniform1f(uniforms.ocean["u_Time"], game_time);
     drawCubeObj(gl, ocean);
     switchShaders(gl, "sun");
     gl.uniform4f(uniforms.sun['u_Eye'], eye[0], eye[1], eye[2], 1.0);
@@ -525,6 +529,14 @@ function setUpOceanShader(gl) {
   var uniforms = new Array();
 
   switchShaders(gl, "ocean");
+
+  // Get the storage location of u_Time
+  var u_Time = gl.getUniformLocation(gl.program, 'u_Time');
+  if (!u_Time) {
+    console.log('Failed to get the storage location of u_Time');
+    return;
+  }
+  uniforms['u_Time'] = u_Time;
 
   // Get the storage location of u_MvpMatrix
   var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
