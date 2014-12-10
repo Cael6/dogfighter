@@ -125,6 +125,7 @@ function getLookAtTrans(pos1, pos2) {
 }
 
 function fireBullet() {
+  document.getElementById('audiotag1').play();
   gaze = normalizeVec(gaze);
   var new_bullet = clone(bullet);
   new_bullet.pos = new Float32Array([eye[0], eye[1], eye[2]]);

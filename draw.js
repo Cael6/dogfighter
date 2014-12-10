@@ -217,6 +217,7 @@ function drawHUD(ctx, gaze, pl_pos, speed, text, deaths, kills){
   ctx.stroke();
 
   dir = subVec(pl_pos, eye);
+  dir = scaleVec(dir, 0.3);
   ctx.beginPath();
   ctx.moveTo(xPos, yPos);
   ctx.lineTo(xPos + dir[0], yPos - dir[2]);

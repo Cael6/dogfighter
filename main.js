@@ -23,7 +23,7 @@ var OCEAN_BLUE=new Float32Array([0.1, 0.2, 0.282]);
 var RED=new Float32Array([1.0, 0.0, 0.0]);
 var WHITE=new Float32Array([1.0, 1.0, 1.0]);
 var GRAY=new Float32Array([0.5, 0.5, 0.5]);
-var SILVER=new Float32Array([0.75, 0.75, 0.75]);
+var SILVER=new Float32Array([1.0, 0.7, 0.7]);
 var BLACK=new Float32Array([0.0, 0.0, 0.0]);
 
 var BLUE=new Float32Array([0.0, 0.0, 1.0]);
@@ -185,7 +185,7 @@ var sun = {
 
 var ocean = {
   'pos' : new Float32Array([0.0, 0.0, 0.0]),
-  'scale' : new Float32Array([250.0, 0.1, 250.0]),
+  'scale' : new Float32Array([view_distance, 0.1, view_distance]),
   'build_colors' : [null, null, null, null, OCEAN_BLUE, null],
   'shader_colors' : null,
   'vertices' : null,
@@ -367,7 +367,7 @@ function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  drawPlaneObj(gl, [WHITE, WHITE, WHITE, WHITE, WHITE, WHITE], 1);
+  drawPlaneObj(gl, [PLANE_COLOR, PLANE_COLOR, PLANE_COLOR, PLANE_COLOR, PLANE_COLOR, PLANE_COLOR], 1);
 }
 
 function drawCubeObj(gl, element){
@@ -466,7 +466,7 @@ function setupBuildingLight(gl){
     return;
   }
 
-  gl.uniform4f(u_BuildDiffuse, 1.0, 0.4, 0.4, 1.0);
+  gl.uniform4f(u_BuildDiffuse, 1.0, 0.2, 0.2, 1.0);
   
   gl.uniform4f(u_BuildSpecular, 1.0, 0.0, 0.0, 1.0);
 
