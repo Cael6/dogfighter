@@ -125,7 +125,7 @@ function getLookAtTrans(pos1, pos2) {
 }
 
 function fireBullet() {
-  document.getElementById('audiotag1').play();
+  playSound('fire');
   gaze = normalizeVec(gaze);
   var new_bullet = clone(bullet);
   new_bullet.pos = new Float32Array([eye[0], eye[1], eye[2]]);
@@ -175,6 +175,7 @@ function checkBulletCollideWithPlane(bullet, now) {
 }
 
 function killEnemy(){
+  playSound('crash');
   kills++;
   enemySpawn();
 }
@@ -188,10 +189,22 @@ function enemySpawn(){
 }
 
 function die() {
+  playSound('crash');
   eye = init_eye;
   gaze = init_gaze;
   up_vec = init_up;
   speed_fac = init_speed_fac;
   deaths++;
   enemySpawn();
+}
+
+function playSound(id) {
+  var sound = document.getElementById(id);
+  if(sound.duration > 0 && !sound.paused) {
+    sound.pause();
+    sound.currentTime = 0;
+    sound.play();
+  } else {
+    sound.play();
+  }
 }

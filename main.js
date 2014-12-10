@@ -310,28 +310,28 @@ function main() {
 
     switchShaders(gl, 'default');
     setupSunLight(gl, eye);
-    setupBuildingLight(gl);
+    // setupBuildingLight(gl);
 
     switchShaders(gl, 'ocean');
     setupSunLight(gl, eye);
-    setupBuildingLight(gl);
+    // setupBuildingLight(gl);
 
     switchShaders(gl, "ocean");
     gl.uniform1f(uniforms.ocean["u_Time"], game_time);
     drawCubeObj(gl, ocean);
-    switchShaders(gl, "sun");
-    gl.uniform4f(uniforms.sun['u_Eye'], eye[0], eye[1], eye[2], 1.0);
-    gl.uniform4f(uniforms.sun['u_Size'], sun.scale[0], sun.scale[1], sun.scale[2], 1.0);
-    drawCubeObj(gl, sun);
+    // switchShaders(gl, "sun");
+    // gl.uniform4f(uniforms.sun['u_Eye'], eye[0], eye[1], eye[2], 1.0);
+    // gl.uniform4f(uniforms.sun['u_Size'], sun.scale[0], sun.scale[1], sun.scale[2], 1.0);
+    // drawCubeObj(gl, sun);
     
     switchShaders(gl, "default");
     for(var n=0; n<bullets.length; n++){
       drawCubeObj(gl, bullets[n]);
     }
-    for(var b=0; b<buildings.length; b++){
-      drawCubeObj(gl, buildings[b]);
-      drawCubeObj(gl, buildings[b].light);
-    }
+    // for(var b=0; b<buildings.length; b++){
+    //   drawCubeObj(gl, buildings[b]);
+    //   drawCubeObj(gl, buildings[b].light);
+    // }
     
     drawPlane(gl, uniforms.default, mdlMatrix, false);
 
