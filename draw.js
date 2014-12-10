@@ -188,10 +188,10 @@ function drawHUD(ctx, gaze, pl_pos, speed, text, deaths, kills){
   // Draw fps
   ctx.font = '18px "Times New Roman"';
   ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Set white to the color of letters
-  ctx.fillText(text, 7, 393);
+  ctx.fillText(text, 360, 580);
   
-  ctx.fillText("Kills: " + kills, 7, 410);
-  ctx.fillText("Deaths: " + deaths, 7, 438);
+  ctx.fillText("Kills: " + kills, 120, 580);
+  ctx.fillText("Deaths: " + deaths, 220, 580);
   
   //draw radar
   var xPos = 730; //position of the center of the radar
