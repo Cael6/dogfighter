@@ -197,7 +197,7 @@ var ocean = {
 };
 
 var bullets = new Array();
-var bullet_speed = 50;
+var bullet_speed = 100;
 var bullet_size = 0.1;
 
 function main() {
@@ -339,11 +339,7 @@ function main() {
     drawHUD(ctx, gaze, pl_pos, spd, "Frame Rate: " + fps.toFixed(2), deaths, kills);
 
     if(eye[1] <= 0.2 || Math.abs(eye[0]) >= 100 || Math.abs(eye[2]) >= 100 || Math.abs(eye[1]) >= 200){
-      eye = init_eye;
-      gaze = init_gaze;
-      up_vec = init_up;
-      speed_fac = init_speed_fac;
-      deaths++;
+      die();
     }
     
     oppMoveTow(eye);
@@ -511,6 +507,16 @@ function resetView() {
 
 function animateBullets(now) {
   for(var i = 0; i < bullets.length; i++) {
+    if(checkBulletCollideWithPlane(bullets[i], now)) {
+      killEnemy();
+
+      for(var j = i; j < bullets.length; j++) { //shift elements of array left for all following elements and pop the last element.
+        bullets[j] = bullets[j + 1];
+      }
+      bullets.pop();
+      i--;
+      break;
+    }
     for(var j = 0; j < 3; j++ ) {
       bullets[i].pos[j] += (now - last)/1000 * bullet_speed * bullets[i].dir[j];
     }
@@ -530,6 +536,9 @@ function animateBullets(now) {
 
 function animateSelf(now) {
   gaze = normalizeVec(gaze);
+  if(Math.abs(vecLength(subVec(eye, pl_pos))) < 6) {
+    die();
+  }
   eye = addVec(eye, scaleVec(gaze, getSpeedFac() * (now - last) / 1000));
 }
 

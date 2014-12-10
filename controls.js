@@ -159,7 +159,7 @@ function getSpeedFac(){
 function fire_step(){
 	if(space_down) {
 		fireBullet();
-		setTimeout(fire_step, 300);
+		setTimeout(fire_step, 1000);
 	}
 }
 
