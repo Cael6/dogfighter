@@ -50,7 +50,7 @@ var pl_up = new Float32Array([0.0, 1.0, 0.0]);
 var buildings = [
   {
     'pos' : new Float32Array([100.0, 3.0, 100.0]),
-    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'scale' : new Float32Array([2.0, 15.0, 2.0]),
     'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
     'shader_colors' : null,
     'vertices' : null,
@@ -63,7 +63,7 @@ var buildings = [
   },
   {
     'pos' : new Float32Array([-100.0, 3.0, 100.0]),
-    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'scale' : new Float32Array([2.0, 15.0, 2.0]),
     'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
     'shader_colors' : null,
     'vertices' : null,
@@ -76,7 +76,7 @@ var buildings = [
   },
   {
     'pos' : new Float32Array([100.0, 3.0, -100.0]),
-    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'scale' : new Float32Array([2.0, 15.0, 2.0]),
     'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
     'shader_colors' : null,
     'vertices' : null,
@@ -89,7 +89,7 @@ var buildings = [
   },
   {
     'pos' : new Float32Array([-100.0, 3.0, -100.0]),
-    'scale' : new Float32Array([1.0, 5.0, 1.0]),
+    'scale' : new Float32Array([2.0, 15.0, 2.0]),
     'build_colors' : [SILVER, SILVER, SILVER, SILVER, SILVER, SILVER],
     'shader_colors' : null,
     'vertices' : null,
@@ -132,7 +132,7 @@ var sun = {
 
 var ocean = {
   'pos' : new Float32Array([0.0, 0.0, 0.0]),
-  'scale' : new Float32Array([1000.0, 0.1, 1000.0]),
+  'scale' : new Float32Array([250.0, 0.1, 250.0]),
   'build_colors' : [null, null, null, null, OCEAN_BLUE, null],
   'shader_colors' : null,
   'vertices' : null,
@@ -313,7 +313,7 @@ function drawPlane(gl, uniforms, mdlMatrix, isSelf) {
   
   gl.uniformMatrix4fv(uniforms['u_MdlMatrix'], false, mdlMatrixChild.elements);
   gl.uniformMatrix4fv(uniforms['u_NMdlMatrix'], false, getInverseTranspose(mdlMatrixChild).elements);
-  drawPlaneObj(gl, [RED, BLUE, YELLOW, BLACK, WHITE, SILVER], 1);
+  drawPlaneObj(gl, [WHITE, WHITE, WHITE, WHITE, WHITE, WHITE], 1);
 }
 
 function drawCubeObj(gl, element){

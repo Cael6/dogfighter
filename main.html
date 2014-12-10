@@ -23,7 +23,6 @@
     <script src="main.js"></script>
     <script id="shader-vs-ocean" type="x-shader/x-vertex">
       uniform float u_Time;
-      
       attribute vec4 a_Position;
       attribute vec4 a_Color;
       attribute vec4 a_Normal;
@@ -34,18 +33,49 @@
       varying vec4 v_Color;
       varying vec4 v_Position;
       varying vec4 v_Normal;
+      varying float v_Time;
 
       void main(void) {
 
-        float s_contrib = 4.0*sin(a_Position.x + 3.0*u_Time);
-        float t_contrib = 3.0*cos(a_Position.z*2.0 + 5.0*u_Time);
+        float s_contrib = 6.0*sin(a_Position.x*2.0 + 3.0*u_Time);
+        float t_contrib = 3.0*cos(a_Position.z*2.0 + 3.0*u_Time);
         float height = s_contrib * t_contrib;
 
         gl_Position = u_MvpMatrix * u_MdlMatrix * vec4(a_Position.x, height, a_Position.z, 1.0);
         v_Position = u_MdlMatrix * vec4(a_Position.x, height, a_Position.z, 1.0);
         v_Normal = u_NormalDirection * u_NMdlMatrix * a_Normal;
         v_Color = a_Color;
-        
+        v_Time = u_Time; 
+      }
+    </script>
+    <script id="shader-fs-ocean" type="x-shader/x-fragment">
+      #ifdef GL_ES
+      precision mediump float;
+      #endif GL_ES
+      varying float v_Time;
+      varying vec4 v_Color;
+      varying vec4 v_Position;
+      varying vec4 v_Normal;
+      uniform vec4 u_eye;
+      uniform vec4 u_Ambient;
+      uniform vec4 u_Diffuse;
+      uniform vec4 u_Specular;
+      uniform vec4 u_LightLocation;
+
+      void main() {
+        float s_contrib = 3.0*sin(v_Position.x*5.0 + 15.0*v_Time);
+        float t_contrib = 0.2*cos(v_Position.z*1.0 + 15.0*v_Time);
+        float height = s_contrib * t_contrib;
+
+        vec4 new_Pos = vec4(v_Position.x, height, v_Position.z, 1.0);
+
+        vec4 new_amb = vec4(u_Ambient.x, u_Ambient.y, u_Ambient.z + 0.1, 1.0);
+        float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-new_Pos)));
+        float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-new_Pos)+normalize(u_eye-new_Pos))));
+        float water_alpha = 1.0; //noise or transparency goes here
+        vec4 this_Color = v_Color*vec4(1.0 * water_alpha, 1.0 * water_alpha, 1.0 * water_alpha, water_alpha);
+        vec4 lighting = (2.0*new_amb + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
+        gl_FragColor = this_Color*lighting;
       }
     </script>
     <script id="shader-vs" type="x-shader/x-vertex">
@@ -109,29 +139,6 @@
         } else {
           gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         }
-      }
-    </script>
-    <script id="shader-fs-ocean" type="x-shader/x-fragment">
-      #ifdef GL_ES
-      precision mediump float;
-      #endif GL_ES
-      varying vec4 v_Color;
-      varying vec4 v_Position;
-      varying vec4 v_Normal;
-      uniform vec4 u_eye;
-      uniform vec4 u_Ambient;
-      uniform vec4 u_Diffuse;
-      uniform vec4 u_Specular;
-      uniform vec4 u_LightLocation;
-
-      void main() {
-        vec4 new_amb = vec4(u_Ambient.x, u_Ambient.y, u_Ambient.z + 0.1, 1.0);
-        float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
-        float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
-        float water_alpha = 1.0; //noise or transparency goes here
-        vec4 this_Color = v_Color*vec4(1.0 * water_alpha, 1.0 * water_alpha, 1.0 * water_alpha, water_alpha);
-        vec4 lighting = (2.0*new_amb + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
-        gl_FragColor = this_Color*lighting;
       }
     </script>
   </body>
