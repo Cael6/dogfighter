@@ -59,7 +59,20 @@ var buildings = [
     'is_static' : true,
     'mdl_matrix' : null,
     'nmdl_matrix' : null,
-    'normal_dir' : 1
+    'normal_dir' : 1,
+    'light' : {
+      'pos' : new Float32Array([100.0, 20.0, 100.0]),
+      'scale' : new Float32Array([1.0, 1.0, 1.0]),
+      'build_colors' : [RED, RED, RED, RED, RED, RED],
+      'shader_colors' : null,
+      'vertices' : null,
+      'normals' : null,
+      'indices' : null,
+      'is_static' : true,
+      'mdl_matrix' : null,
+      'nmdl_matrix' : null,
+      'normal_dir' : -1,
+    }
   },
   {
     'pos' : new Float32Array([-100.0, 3.0, 100.0]),
@@ -72,7 +85,20 @@ var buildings = [
     'is_static' : true,
     'mdl_matrix' : null,
     'nmdl_matrix' : null,
-    'normal_dir' : 1
+    'normal_dir' : 1,
+    'light' : {
+      'pos' : new Float32Array([-100.0, 20.0, 100.0]),
+      'scale' : new Float32Array([1.0, 1.0, 1.0]),
+      'build_colors' : [RED, RED, RED, RED, RED, RED],
+      'shader_colors' : null,
+      'vertices' : null,
+      'normals' : null,
+      'indices' : null,
+      'is_static' : true,
+      'mdl_matrix' : null,
+      'nmdl_matrix' : null,
+      'normal_dir' : -1,
+    }
   },
   {
     'pos' : new Float32Array([100.0, 3.0, -100.0]),
@@ -85,7 +111,20 @@ var buildings = [
     'is_static' : true,
     'mdl_matrix' : null,
     'nmdl_matrix' : null,
-    'normal_dir' : 1
+    'normal_dir' : 1,
+    'light' : {
+      'pos' : new Float32Array([100.0, 20.0, -100.0]),
+      'scale' : new Float32Array([1.0, 1.0, 1.0]),
+      'build_colors' : [RED, RED, RED, RED, RED, RED],
+      'shader_colors' : null,
+      'vertices' : null,
+      'normals' : null,
+      'indices' : null,
+      'is_static' : true,
+      'mdl_matrix' : null,
+      'nmdl_matrix' : null,
+      'normal_dir' : -1,
+    }
   },
   {
     'pos' : new Float32Array([-100.0, 3.0, -100.0]),
@@ -98,7 +137,20 @@ var buildings = [
     'is_static' : true,
     'mdl_matrix' : null,
     'nmdl_matrix' : null,
-    'normal_dir' : 1
+    'normal_dir' : 1,
+    'light' : {
+      'pos' : new Float32Array([-100.0, 20.0, -100.0]),
+      'scale' : new Float32Array([1.0, 1.0, 1.0]),
+      'build_colors' : [RED, RED, RED, RED, RED, RED],
+      'shader_colors' : null,
+      'vertices' : null,
+      'normals' : null,
+      'indices' : null,
+      'is_static' : true,
+      'mdl_matrix' : null,
+      'nmdl_matrix' : null,
+      'normal_dir' : -1,
+    }
   }
 ];
 
@@ -211,6 +263,8 @@ function main() {
   for(var l=0; l<buildings.length; l++){
     initCube(buildings[l]);
     buildings[l].uniforms = uniforms.default;
+    initCube(buildings[l].light);
+    buildings[l].light.uniforms = uniforms.default;
   }
   initCube(sun);
   sun.uniforms = uniforms.sun;
@@ -254,10 +308,12 @@ function main() {
     last = now;
 
     switchShaders(gl, 'default');
-    setupLightDefault(gl, eye);
+    setupSunLight(gl, eye);
+    setupBuildingLight(gl);
 
     switchShaders(gl, 'ocean');
-    setupLightDefault(gl, eye);
+    setupSunLight(gl, eye);
+    setupBuildingLight(gl);
 
     switchShaders(gl, "ocean");
     gl.uniform1f(uniforms.ocean["u_Time"], game_time);
@@ -273,6 +329,7 @@ function main() {
     }
     for(var b=0; b<buildings.length; b++){
       drawCubeObj(gl, buildings[b]);
+      drawCubeObj(gl, buildings[b].light);
     }
     
     drawPlane(gl, uniforms.default, mdlMatrix, false);
@@ -351,7 +408,7 @@ function initArrayBuffer(gl, data, num, type, attribute) {
   return true;
 }
 
-function setupLightDefault(gl, eye){
+function setupSunLight(gl, eye){
 	// Get the storage location of u_Ambient
 	var u_Ambient = gl.getUniformLocation(gl.program, 'u_Ambient');
 	if (!u_Ambient) {
@@ -396,6 +453,36 @@ function setupLightDefault(gl, eye){
 	gl.uniform4f(u_LightLocation, sun.pos[0], sun.pos[1], sun.pos[2], 1.0);
 	
 	gl.uniform4f(u_eye, eye[0], eye[1], eye[2], 1.0);
+}
+
+
+function setupBuildingLight(gl){
+
+  u_BuildDiffuse = gl.getUniformLocation(gl.program, 'u_BuildDiffuse');
+  if (!u_BuildDiffuse) {
+    console.log('Failed to get the storage location of u_BuildDiffuse');
+    return;
+  }
+  u_BuildSpecular = gl.getUniformLocation(gl.program, 'u_BuildSpecular');
+  if (!u_BuildSpecular) {
+    console.log('Failed to get the storage location of u_BuildSpecular');
+    return;
+  }
+
+  gl.uniform4f(u_BuildDiffuse, 1.0, 0.4, 0.4, 1.0);
+  
+  gl.uniform4f(u_BuildSpecular, 1.0, 0.0, 0.0, 1.0);
+
+  for(var i = 0; i < buildings.length; i++) {
+    // Get the storage location of u_LightLocation
+    var u_BuildLightLoc = gl.getUniformLocation(gl.program, 'u_BuildLightLoc' + (i + 1));
+    if (!u_BuildLightLoc) {
+      console.log('Failed to get the storage location of u_BuildLightLoc');
+      return;
+    }
+
+    gl.uniform4f(u_BuildLightLoc, buildings[i].light.pos[0],buildings[i].light.pos[1],buildings[i].light.pos[2],1.0);
+  }
 }
 
 var last = Date.now();

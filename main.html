@@ -61,6 +61,12 @@
       uniform vec4 u_Diffuse;
       uniform vec4 u_Specular;
       uniform vec4 u_LightLocation;
+      uniform vec4 u_BuildSpecular;
+      uniform vec4 u_BuildDiffuse;
+      uniform vec4 u_BuildLightLoc1;
+      uniform vec4 u_BuildLightLoc2;
+      uniform vec4 u_BuildLightLoc3;
+      uniform vec4 u_BuildLightLoc4;
 
       void main() {
         float s_contrib = 3.0*sin(v_Position.x*5.0 + 15.0*v_Time);
@@ -75,6 +81,23 @@
         float water_alpha = 1.0; //noise or transparency goes here
         vec4 this_Color = v_Color*vec4(1.0 * water_alpha, 1.0 * water_alpha, 1.0 * water_alpha, water_alpha);
         vec4 lighting = (2.0*new_amb + u_Diffuse*nDotL + u_Specular*pow(hDotL, 3.0));
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc1-new_Pos)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc1-new_Pos)+normalize(u_eye-new_Pos))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc2-new_Pos)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc2-new_Pos)+normalize(u_eye-new_Pos))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc3-new_Pos)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc3-new_Pos)+normalize(u_eye-new_Pos))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc4-new_Pos)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc4-new_Pos)+normalize(u_eye-new_Pos))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
         gl_FragColor = this_Color*lighting;
       }
     </script>
@@ -113,12 +136,34 @@
       uniform vec4 u_LightLocation;
       uniform float u_isPlane;
       uniform float u_isBuilding;
+      uniform vec4 u_BuildSpecular;
+      uniform vec4 u_BuildDiffuse;
+      uniform vec4 u_BuildLightLoc1;
+      uniform vec4 u_BuildLightLoc2;
+      uniform vec4 u_BuildLightLoc3;
+      uniform vec4 u_BuildLightLoc4;
       varying vec4 vLighting;
 
       void main() {
         float nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_LightLocation-v_Position)));
         float hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_LightLocation-v_Position)+normalize(u_eye-v_Position))));
         vec4 lighting = (u_Ambient + 8.0*u_Diffuse*nDotL + 8.0*u_Specular*pow(hDotL, 256.0));
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc1-v_Position)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc1-v_Position)+normalize(u_eye-v_Position))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc2-v_Position)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc2-v_Position)+normalize(u_eye-v_Position))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc3-v_Position)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc3-v_Position)+normalize(u_eye-v_Position))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
+
+        nDotL = max(0.0, dot(normalize(v_Normal), normalize(u_BuildLightLoc4-v_Position)));
+        hDotL = max(0.0, dot(normalize(v_Normal), normalize(normalize(u_BuildLightLoc4-v_Position)+normalize(u_eye-v_Position))));
+        lighting = lighting + u_BuildDiffuse*nDotL + u_BuildSpecular*pow(hDotL, 256.0);
 
         gl_FragColor = v_Color*lighting;
       }
