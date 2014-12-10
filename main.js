@@ -31,6 +31,7 @@ var YELLOW=new Float32Array([1.0, 1.0, 0.0]);
 var GREEN=new Float32Array([0.0, 1.0, 0.0]);
 
 var PLANE_COLOR=new Float32Array([0.1, 0.1, 0.2]);
+var BULLET_COLOR=new Float32Array([0.9, 0.9, 0.5]);
 var SAND =new Float32Array([1.0, 1.0, 0.59]);
 
 
@@ -157,7 +158,7 @@ var buildings = [
 var bullet = {
   'pos' : null,
   'scale' : new Float32Array([0.1, 0.1, 0.1]),
-  'build_colors' : [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],
+  'build_colors' : [BULLET_COLOR, BULLET_COLOR, BULLET_COLOR, BULLET_COLOR, BULLET_COLOR, BULLET_COLOR],
   'shader_colors' : null,
   'vertices' : null,
   'normals' : null,
