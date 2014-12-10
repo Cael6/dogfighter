@@ -145,36 +145,31 @@ function clone(obj) {
   return copy;
 }
 
-function lineCollidesWithSphere(position, direction, sphereCenter, sphereRadius) {
-  var secondPos = addVec(position, direction);
-  var a = Math.pow(secondPos[0] - position[0], 2) + Math.pow(secondPos[1] - position[1], 2) + Math.pow(secondPos[2] - position[2], 2);
-  var b = 2 * (
-                (secondPos[0] - position[0]) * (position[0] - sphereCenter[0]) 
-                + (secondPos[1] - position[1]) * (position[1] - sphereCenter[1])
-                + (secondPos[2] - position[2]) * (position[2] - sphereCenter[2])
-              );
-  var c = Math.pow(position[0]-sphereCenter[0], 2) + Math.pow(position[0]-sphereCenter[0], 2) + Math.pow(position[0]-sphereCenter[0], 2) - Math.pow(sphereRadius, 2);
-
-  var delta = Math.pow(b,2) - 4 * a * c;
-
-  return delta >= 0;
+function lineCollidesWithSphere(origin, direction, sphereCenter, sphereRadius) {
+  var oMinusC = subVec(origin, sphereCenter);
+  var delta = dotProduct(direction, oMinusC) - Math.pow(vecLength(oMinusC), 2) + Math.pow(sphereRadius,2);
+  return delta >=0;
 }
 
+// function lineCollidesWithSphere(position, direction, sphereCenter, sphereRadius) {
+//   var secondPos = addVec(position, direction);
+//   var a = Math.pow(secondPos[0] - position[0], 2) + Math.pow(secondPos[1] - position[1], 2) + Math.pow(secondPos[2] - position[2], 2);
+//   var b = 2 * (
+//                 (secondPos[0] - position[0]) * (position[0] - sphereCenter[0]) 
+//                 + (secondPos[1] - position[1]) * (position[1] - sphereCenter[1])
+//                 + (secondPos[2] - position[2]) * (position[2] - sphereCenter[2])
+//               );
+//   var c = Math.pow(position[0]-sphereCenter[0], 2) + Math.pow(position[0]-sphereCenter[0], 2) + Math.pow(position[0]-sphereCenter[0], 2) - Math.pow(sphereRadius, 2);
+
+//   var delta = Math.pow(b,2) - 4 * a * c;
+
+//   return delta >= 0;
+// }
+
 function checkBulletCollideWithPlane(bullet, now) {
-  if(lineCollidesWithSphere(bullet.pos, bullet.dir, pl_pos, 4.0)) {
-    var resulting_position = addVec(bullet.pos, scaleVec(bullet.dir, (now - last)/1000 * bullet_speed));
-    for(var i = 0; i < 3; i++) {
-      if(bullet.pos[i] < pl_pos[i]) {
-        if(resulting_position[i] > pl_pos[i]) {
-          return true;
-        }
-      } else {
-        if(resulting_position[i] < pl_pos[i]) {
-          return true;
-        }
-      }
-    }
-    return false;
+  bullet.dir = normalizeVec(bullet.dir);
+  if(lineCollidesWithSphere(bullet.pos, bullet.dir, pl_pos, 5.0)) {
+    return true;
   }
 }
 
@@ -184,9 +179,9 @@ function killEnemy(){
 }
 
 function enemySpawn(){
-  var rand_disp = new Float32Array([(Math.floor(Math.random() + 0.5) * -2 + 1) * (Math.random() * 20 + 20), 
-                                    (Math.floor(Math.random() + 0.5) * -2 + 1) * (Math.random() * 20 + 20), 
-                                    (Math.floor(Math.random() + 0.5) * -2 + 1) * (Math.random() * 20 + 20)
+  var rand_disp = new Float32Array([eye[0] + (Math.floor(Math.random() + 0.5) * -2 + 1) * (Math.random() * 20 + 20), 
+                                    Math.max(eye[1] +  (Math.floor(Math.random() + 0.5) * -2 + 1) * (Math.random() * 20), 5), 
+                                    eye[2] + (Math.floor(Math.random() + 0.5) * -2 + 1) * (Math.random() * 20 + 20)
                                   ]);
   pl_pos = rand_disp;
 }

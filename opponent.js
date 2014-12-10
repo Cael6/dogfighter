@@ -1,5 +1,5 @@
 
-var opp_spd = 0.005;
+var opp_spd = 0.00;
 
 function oppJumpTo(position){
 	pl_pos[0] = position[0];

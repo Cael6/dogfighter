@@ -75,18 +75,18 @@ function initEventHandlers() {
 			left_step();
 		}
       	break;
-      case 81: //q
-    if(!q_down){
-      q_down = true;
-      q_step();
-    }
-      break;
-      case 69: //e
-    if(!e_down){
-      e_down = true;
-      e_step();
-    }
-      break;
+    //   case 81: //q
+    // if(!q_down){
+    //   q_down = true;
+    //   q_step();
+    // }
+    //   break;
+    //   case 69: //e
+    // if(!e_down){
+    //   e_down = true;
+    //   e_step();
+    // }
+    //   break;
       case 39: //right
 		//Roll left (Change up vector)
 		if(!right_down) {
@@ -191,29 +191,29 @@ function s_step() {
 	}
 }
 
-function q_step() {
-	if(q_down) {
-		//Decrease throttle
-		gaze = normalizeVec(gaze);
-	  	var cross = crossProduct(gaze, up_vec);
-		for(var i = 0; i < 3; i++) {
-			eye[i] = eye[i] - cross[i] * speed_fac;
-		}
-		setTimeout(q_step, 50);
-  	}
-}
+// function q_step() {
+// 	if(q_down) {
+// 		//Decrease throttle
+// 		gaze = normalizeVec(gaze);
+// 	  	var cross = crossProduct(gaze, up_vec);
+// 		for(var i = 0; i < 3; i++) {
+// 			eye[i] = eye[i] - cross[i] * speed_fac;
+// 		}
+// 		setTimeout(q_step, 50);
+//   	}
+// }
 
-function e_step() {
-    if(e_down) {
-    	//Decrease throttle
-    	gaze = normalizeVec(gaze);
-        var cross = crossProduct(gaze, up_vec);
-    	for(var i = 0; i < 3; i++) {
-    		eye[i] = eye[i] + cross[i] * speed_fac;
-    	}
-		setTimeout(e_step, 50);
-  	}
-}
+// function e_step() {
+//     if(e_down) {
+//     	//Decrease throttle
+//     	gaze = normalizeVec(gaze);
+//         var cross = crossProduct(gaze, up_vec);
+//     	for(var i = 0; i < 3; i++) {
+//     		eye[i] = eye[i] + cross[i] * speed_fac;
+//     	}
+// 		setTimeout(e_step, 50);
+//   	}
+// }
 
 function a_step() {
     if(a_down) {

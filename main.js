@@ -197,7 +197,7 @@ var ocean = {
 };
 
 var bullets = new Array();
-var bullet_speed = 100;
+var bullet_speed = 200;
 var bullet_size = 0.1;
 
 function main() {
